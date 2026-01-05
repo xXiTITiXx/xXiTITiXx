@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Square Survival ULTRA 2.0 – Optimized Chaos Edition</title>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #151628, #05030a);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      color: #f5f5ff;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #game-wrapper {
+      position: relative;
+    }
+
+    canvas {
+      border-radius: 18px;
+      border: 1px solid rgba(130, 150, 255, 0.6);
+      background: #05060e;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
+      cursor: crosshair;
+    }
+
+    #top-ui {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      font-size: 12px;
+      z-index: 3;
+    }
+
+    .badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(5, 8, 24, 0.9);
+      border: 1px solid rgba(140, 160, 255, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      background: rgba(5, 8, 24, 0.9);
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(140, 160, 255, 0.5);
+      max-width: 560px;
+      text-align: center;
+      z-index: 3;
+    }
+
+    #relic-panel {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      width: 230px;
+      background: rgba(6, 8, 26, 0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(145, 165, 255, 0.8);
+      padding: 6px 8px;
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+      z-index: 2;
+    }
+
+    #relic-panel h3 {
+      margin: 0 0 4px 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .section-title {
+      margin-top: 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+      border-bottom: 1px solid rgba(145, 165, 255, 0.4);
+      padding-bottom: 2px;
+    }
+
+    .relic-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .relic-name {
+      font-size: 10px;
+    }
+
+    .relic-count {
+      font-size: 10px;
+      opacity: 0.9;
+    }
+
+    .relic-legendary .relic-name { color: #ffeb86; }
+    .relic-epic .relic-name { color: #ff9af2; }
+    .relic-rare .relic-name { color: #9fd0ff; }
+
+    #log {
+      margin-top: 4px;
+      max-height: 80px;
+      overflow-y: auto;
+      font-size: 10px;
+      color: #cdd3ff;
+    }
+
+    .log-line {
+      white-space: nowrap;
+    }
+
+    #right-panel {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 240px;
+      background: rgba(6, 8, 26, 0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(145, 165, 255, 0.8);
+      padding: 6px 8px;
+      font-size: 11px;
+      z-index: 2;
+    }
+
+    #right-panel h3 {
+      margin: 0 0 4px 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .stat-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    #pets-list {
+      max-height: 100px;
+      overflow-y: auto;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    .pet-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1px;
+    }
+
+    .pet-name {
+      margin-right: 4px;
+    }
+
+    #btn-levelup {
+      margin-top: 4px;
+      width: 100%;
+      padding: 4px 0;
+      border-radius: 999px;
+      border: 1px solid rgba(165, 210, 255, 0.9);
+      background: radial-gradient(circle at 0 0, #3c8eff, #11152b);
+      color: #f5f5ff;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+    }
+
+    #btn-levelup:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .choice-popup {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(5, 6, 18, 0.96), rgba(0, 0, 0, 0.96));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .choice-box {
+      width: 620px;
+      background: rgba(10, 12, 32, 0.97);
+      border-radius: 14px;
+      border: 1px solid rgba(170, 200, 255, 0.9);
+      padding: 10px 12px;
+      color: #f5f5ff;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+      font-size: 11px;
+    }
+
+    .choice-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 6px;
+      opacity: 0.9;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .choice-card {
+      flex: 1 1 calc(20% - 6px);
+      background: radial-gradient(circle at top, #1d214a, #090918);
+      border-radius: 10px;
+      border: 1px solid rgba(160, 180, 255, 0.8);
+      padding: 5px 6px;
+      cursor: pointer;
+      font-size: 10px;
+      min-width: 110px;
+    }
+
+    .choice-card:hover {
+      border-color: #fff2a0;
+      box-shadow: 0 0 12px rgba(255, 242, 160, 0.35);
+    }
+
+    .choice-name {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .choice-desc {
+      font-size: 9px;
+      opacity: 0.9;
+    }
+
+    .choice-tag {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+
+    .choice-legendary {
+      border-color: #ffeb86;
+    }
+
+    .choice-epic {
+      border-color: #ff9af2;
+    }
+
+    .choice-rare {
+      border-color: #9fd0ff;
+    }
+
+    /* GAME OVER overlay */
+    #game-over {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(5, 0, 10, 0.95), rgba(0, 0, 0, 0.98));
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      color: #f5f5ff;
+      text-align: center;
+    }
+
+    #game-over h1 {
+      margin: 0 0 10px 0;
+      font-size: 32px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    #game-over p {
+      margin: 2px 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    #btn-restart {
+      margin-top: 12px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 230, 140, 0.9);
+      background: radial-gradient(circle at 0 0, #ffb347, #33120a);
+      color: #0b0410;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+    }
+
+    #btn-restart:hover {
+      box-shadow: 0 0 14px rgba(255, 230, 140, 0.6);
+    }
+  </style>
+</head>
+<body>
+<div id="game-wrapper">
+  <canvas id="canvas" width="960" height="600"></canvas>
+
+  <div id="top-ui">
+    <div class="badge" id="hp-badge">HP: 100</div>
+    <div class="badge" id="wave-badge">WAVE: 1</div>
+    <div class="badge" id="xp-badge">XP: 0 / 50</div>
+    <div class="badge" id="chaos-badge">CHAOS: 0</div>
+    <div class="badge" id="lvl-badge">LVL: 1</div>
+  </div>
+
+  <div id="relic-panel">
+    <h3>Relikty & Upgrady</h3>
+    <div class="section-title">Relikty</div>
+    <div id="relic-list">Brak reliktów – przetrwaj, aby zdobyć moc.</div>
+    <div class="section-title">Upgrady</div>
+    <div id="upgrade-list">Brak upgrade'ów – wbijaj level, aby je wybrać.</div>
+    <div class="section-title">Log</div>
+    <div id="log"></div>
+  </div>
+
+  <div id="right-panel">
+    <h3>Pety & Statystyki</h3>
+    <div class="section-title">Pety</div>
+    <div id="pets-list">Brak petów – zabijaj wrogów, żeby dropić.</div>
+    <div class="section-title">Statystyki</div>
+    <div class="stat-line"><span>Pety (limit 15)</span><span id="stat-pets">0</span></div>
+    <div class="stat-line"><span>Wrogowie</span><span id="stat-enemies">0</span></div>
+    <div class="stat-line"><span>Pociski/s</span><span id="stat-dps">0</span></div>
+    <div class="stat-line"><span>Chaos level</span><span id="stat-chaos">0</span></div>
+    <button id="btn-levelup" disabled>LEVEL UP (SPACJA)</button>
+  </div>
+
+  <div id="hint">
+    Ruch: WSAD / strzałki • Celowanie: myszką • Strzał: auto w kierunku kursora + dodatkowy przytrzymany LPM • Limit petów: 15 • Każda fala: +2% HP/DMG/SPEED wrogów.
+  </div>
+
+  <div id="game-over">
+    <h1>GAME OVER</h1>
+    <p id="go-text">Dotarłeś do fali X.</p>
+    <p>Naciśnij przycisk, aby zresetować chaos od fali 1.</p>
+    <button id="btn-restart">RESTART</button>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const hpBadge = document.getElementById("hp-badge");
+  const waveBadge = document.getElementById("wave-badge");
+  const xpBadge = document.getElementById("xp-badge");
+  const chaosBadge = document.getElementById("chaos-badge");
+  const lvlBadge = document.getElementById("lvl-badge");
+
+  const relicListEl = document.getElementById("relic-list");
+  const upgradeListEl = document.getElementById("upgrade-list");
+  const petsListEl = document.getElementById("pets-list");
+  const logEl = document.getElementById("log");
+
+  const statPets = document.getElementById("stat-pets");
+  const statEnemies = document.getElementById("stat-enemies");
+  const statDps = document.getElementById("stat-dps");
+  const statChaos = document.getElementById("stat-chaos");
+  const btnLevelup = document.getElementById("btn-levelup");
+
+  const gameOverOverlay = document.getElementById("game-over");
+  const goText = document.getElementById("go-text");
+  const btnRestart = document.getElementById("btn-restart");
+
+  let choicePopup = null;
+
+  // Input
+  const keys = {};
+  let mouseX = W/2;
+  let mouseY = H/2;
+  let mouseDown = false;
+
+  window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+    }
+    if (e.key === " ") tryLevelUp();
+  });
+  window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  });
+
+  canvas.addEventListener("mousedown", e => {
+    if (e.button === 0) mouseDown = true;
+  });
+  canvas.addEventListener("mouseup", e => {
+    if (e.button === 0) mouseDown = false;
+  });
+
+  // Audio
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  function playTone(freq, duration = 0.12, type = "sine", volume = 0.25) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.stop(audioCtx.currentTime + duration);
+  }
+  window.addEventListener("click", initAudio, { once: true });
+
+  function playGameOverSound() {
+    if (!audioCtx) return;
+    playTone(220, 0.25, "square", 0.3);
+    setTimeout(() => playTone(160, 0.25, "square", 0.3), 180);
+  }
+
+  function addLog(text, important = false) {
+    const line = document.createElement("div");
+    line.className = "log-line";
+    line.textContent = text;
+    if (important) line.style.color = "#ffeb86";
+    logEl.appendChild(line);
+    if (logEl.children.length > 10) {
+      logEl.removeChild(logEl.firstChild);
+    }
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  let gameOver = false;
+
+  const playerBase = {
+    x: W/2,
+    y: H/2,
+    r: 12,
+    speed: 2.6,
+    baseSpeed: 2.6,
+    hp: 100,
+    maxHp: 100,
+    fireRate: 4.0,
+    baseDamage: 10,
+  };
+
+  let player = {};
+
+  let time = 0;
+  let lastTs = performance.now();
+
+  let bullets = [];
+  let enemies = [];
+  let pets = [];
+  let orbs = [];
+
+  let xp = 0;
+  let xpToLevel = 50;
+  let level = 1;
+  let chaos = 0;
+  let wave = 1;
+  let enemyScale = 1;
+  let enemyLimit = 120;
+
+  const relicsBase = {
+    necroStaff: 0,
+    burningHeart: 0,
+    chaosEngine: 0,
+    frostCore: 0,
+    replicationOrb: 0,
+    hasteCircuit: 0,
+  };
+  let relics = {};
+
+  const relicConfigs = {
+    necroStaff: {
+      name: "Laska Nekromanty",
+      rarity: "legendary",
+      desc: "Co kilka sekund przyzywa falę minionów."
+    },
+    burningHeart: {
+      name: "Płonące Serce",
+      rarity: "epic",
+      desc: "Aura ognia wokół gracza, mocne AOE."
+    },
+    chaosEngine: {
+      name: "Generator Chaosu",
+      rarity: "epic",
+      desc: "Losowe efekty: meteory, lasery, wybuchy, miniony."
+    },
+    frostCore: {
+      name: "Kryształ Zamrożenia",
+      rarity: "rare",
+      desc: "Spowalnia i zamraża wrogów dookoła gracza."
+    },
+    replicationOrb: {
+      name: "Orb Replikacji",
+      rarity: "rare",
+      desc: "Pociski mają szansę klonować się."
+    },
+    hasteCircuit: {
+      name: "Obwód Przyspieszenia",
+      rarity: "rare",
+      desc: "Zwiększa prędkość ruchu i szybkostrzelność."
+    }
+  };
+
+  const relicTimersBase = {
+    necroStaff: 0,
+    burningHeart: 0,
+    chaosEngine: 0,
+    frostCore: 0,
+  };
+  let relicTimers = {};
+
+  const upgradesBase = {
+    dmgUp: 0,
+    atkSpeedUp: 0,
+    hpUp: 0,
+    moveSpeedUp: 0,
+    rangeUp: 0,
+    aoeUp: 0,
+    chaosBoost: 0,
+    petPower: 0,
+    summonBoost: 0,
+  };
+  let upgrades = {};
+
+  const upgradeConfigs = {
+    dmgUp:   { name: "+6 Damage", desc: "+6 obrażeń do wszystkich ataków." },
+    atkSpeedUp: { name: "+10% Atk Speed", desc: "+10% szybkostrzelności." },
+    hpUp: { name: "+20 Max HP", desc: "+20 maksymalnego HP." },
+    moveSpeedUp: { name: "+0.3 Speed", desc: "+0.3 prędkości ruchu." },
+    rangeUp: { name: "+10% Range", desc: "+10% zasięgu petów." },
+    aoeUp: { name: "+15% AOE", desc: "+15% promienia efektów obszarowych." },
+    chaosBoost: { name: "+1 Chaos / Fala", desc: "+1 chaos na każdą nową falę." },
+    petPower: { name: "+10% Pet Power", desc: "+10% dmg/szybkości/zasięgu petów." },
+    summonBoost: { name: "+10% Summon Power", desc: "+10% dmg/szybkości summonów z reliktów." },
+  };
+
+  const petTypes = {
+    mini: {
+      name: "Mini-Square",
+      role: "ranged",
+      baseDmg: 6,
+      baseCd: 1400,
+      baseRange: 220,
+      color: "#7cffc5",
+    },
+    orbit: {
+      name: "Orbit-Drone",
+      role: "orbit",
+      baseDmg: 5,
+      baseCd: 0,
+      baseRange: 70,
+      color: "#a0c8ff",
+    },
+    laser: {
+      name: "Laser-Buddy",
+      role: "laser",
+      baseDmg: 15,
+      baseCd: 3000,
+      baseRange: 999,
+      color: "#ffd980",
+    },
+    chaos: {
+      name: "Chaos-Pet",
+      role: "chaos",
+      baseDmg: 10,
+      baseCd: 3200,
+      baseRange: 240,
+      color: "#ff9af2",
+    },
+    bomber: {
+      name: "Bomber-Pet",
+      role: "bomber",
+      baseDmg: 22,
+      baseCd: 2300,
+      baseRange: 100,
+      color: "#ff7b7b",
+    }
+  };
+
+  function resetGame() {
+    player = JSON.parse(JSON.stringify(playerBase));
+    bullets = [];
+    enemies = [];
+    pets = [];
+    orbs = [];
+    xp = 0;
+    xpToLevel = 50;
+    level = 1;
+    chaos = 0;
+    wave = 1;
+    enemyScale = 1;
+    relics = JSON.parse(JSON.stringify(relicsBase));
+    relicTimers = JSON.parse(JSON.stringify(relicTimersBase));
+    upgrades = JSON.parse(JSON.stringify(upgradesBase));
+    gameOver = false;
+    gameOverOverlay.style.display = "none";
+    choicePopup && choicePopup.remove();
+    choicePopup = null;
+    logEl.innerHTML = "";
+    for (let i = 0; i < 8; i++) spawnEnemy(false);
+    addLog("Square Survival ULTRA 2.0 – Optimized Chaos Edition.");
+    addLog("Myszka = celowanie, LPM = dodatkowy ogień, limit petów 15, Game Over → restart od fali 1.");
+    updateRelicUI();
+    updateTopUI();
+  }
+
+  btnRestart.addEventListener("click", () => {
+    resetGame();
+  });
+
+  function updateRelicUI() {
+    const entries = Object.entries(relics).filter(([,v]) => v > 0);
+    if (entries.length === 0) {
+      relicListEl.textContent = "Brak reliktów – przetrwaj, aby zdobyć moc.";
+    } else {
+      relicListEl.innerHTML = "";
+      entries.forEach(([key, value]) => {
+        const cfg = relicConfigs[key];
+        const div = document.createElement("div");
+        div.className = "relic-line relic-" + (cfg.rarity || "common");
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "relic-name";
+        nameSpan.textContent = cfg.name;
+        const countSpan = document.createElement("span");
+        countSpan.className = "relic-count";
+        countSpan.textContent = "x" + value;
+        div.appendChild(nameSpan);
+        div.appendChild(countSpan);
+        relicListEl.appendChild(div);
+      });
+    }
+
+    const upEntries = Object.entries(upgrades).filter(([,v]) => v > 0);
+    if (upEntries.length === 0) {
+      upgradeListEl.textContent = "Brak upgrade'ów – wbijaj level, aby je wybrać.";
+    } else {
+      upgradeListEl.innerHTML = "";
+      upEntries.forEach(([key, value]) => {
+        const cfg = upgradeConfigs[key];
+        if (!cfg) return;
+        const div = document.createElement("div");
+        div.className = "relic-line";
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "relic-name";
+        nameSpan.textContent = cfg.name;
+        const countSpan = document.createElement("span");
+        countSpan.className = "relic-count";
+        countSpan.textContent = "x" + value;
+        div.appendChild(nameSpan);
+        div.appendChild(countSpan);
+        upgradeListEl.appendChild(div);
+      });
+    }
+  }
+
+  function updatePetsUI() {
+    if (pets.length === 0) {
+      petsListEl.textContent = "Brak petów – zabijaj wrogów, żeby dropić.";
+      return;
+    }
+    petsListEl.innerHTML = "";
+    pets.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "pet-line";
+      const left = document.createElement("span");
+      left.className = "pet-name";
+      left.textContent = petTypes[p.type].name + " Lv." + p.level;
+      const right = document.createElement("span");
+      right.textContent = "DMG:" + p.dmg.toFixed(0);
+      div.appendChild(left);
+      div.appendChild(right);
+      petsListEl.appendChild(div);
+    });
+  }
+
+  function updateTopUI() {
+    hpBadge.textContent = "HP: " + Math.max(0, Math.round(player.hp));
+    waveBadge.textContent = "WAVE: " + wave;
+    xpBadge.textContent = "XP: " + Math.floor(xp) + " / " + xpToLevel;
+    chaosBadge.textContent = "CHAOS: " + chaos;
+    lvlBadge.textContent = "LVL: " + level;
+
+    statPets.textContent = pets.length + " / 15";
+    statEnemies.textContent = enemies.length;
+    const dps = (player.fireRate + relics.replicationOrb * 0.5 + pets.length * 0.4);
+    statDps.textContent = dps.toFixed(1);
+    statChaos.textContent = chaos;
+  }
+
+  function spawnEnemyWave(isBossWave = false) {
+    if (enemies.length >= enemyLimit) return;
+    const baseCount = 6 + wave * 3 + chaos * 2;
+    const count = isBossWave ? Math.floor(baseCount * 0.3) : baseCount;
+
+    for (let i = 0; i < count; i++) {
+      spawnEnemy(isBossWave && i < Math.max(1, Math.floor(count*0.2)));
+      if (enemies.length >= enemyLimit) break;
+    }
+    const scaleFactor = 1.02;
+    enemyScale *= scaleFactor;
+    if (!isBossWave) chaos += 1 + upgrades.chaosBoost;
+    else chaos += 2 + upgrades.chaosBoost * 2;
+  }
+
+  function spawnEnemy(isBoss = false) {
+    const edge = Math.floor(Math.random()*4);
+    let x, y;
+    if (edge === 0) { x = Math.random()*W; y = -20; }
+    else if (edge === 1) { x = W+20; y = Math.random()*H; }
+    else if (edge === 2) { x = Math.random()*W; y = H+20; }
+    else { x = -20; y = Math.random()*H; }
+
+    const typeRoll = Math.random();
+    let type = "charger";
+    // Nowe typy zamiast wanderer/orbit
+    if      (typeRoll < 0.25) type = "swarm";
+    else if (typeRoll < 0.5) type = "charger";
+    else if (typeRoll < 0.75) type = "dashling";
+    else type = "splitter";
+
+    let hp = (16 + wave*1.5 + chaos*2) * enemyScale;
+    let speed = (0.8 + wave*0.05) * enemyScale;
+    let elite = false;
+
+    if (type === "swarm") {
+      hp *= 0.5;
+      speed *= 1.5;
+    }
+    if (type === "splitter") {
+      hp *= 1.2;
+      speed *= 1.0;
+    }
+    if (type === "dashling") {
+      hp *= 0.9;
+      speed *= 1.6;
+    }
+
+    if (Math.random() < 0.12 + chaos*0.01 || isBoss) {
+      elite = true;
+      hp *= isBoss ? 6 : 3;
+      speed *= isBoss ? 1.1 : 1.3;
+    }
+
+    enemies.push({
+      x, y,
+      r: elite ? 14 : (type === "swarm" ? 7 : 9),
+      hp,
+      maxHp: hp,
+      speed,
+      elite,
+      type,
+      slow: 0,
+      freeze: 0,
+      dashCd: 1200 + Math.random()*800,
+      dashTimer: 0,
+      splitChild: false,
+      boss: isBoss
+    });
+  }
+
+  function spawnSplitChildren(parent) {
+    const count = 2;
+    for (let i = 0; i < count; i++) {
+      if (enemies.length >= enemyLimit) return;
+      const angle = Math.random()*Math.PI*2;
+      const dist = 12;
+      enemies.push({
+        x: parent.x + Math.cos(angle)*dist,
+        y: parent.y + Math.sin(angle)*dist,
+        r: 7,
+        hp: parent.maxHp * 0.4,
+        maxHp: parent.maxHp * 0.4,
+        speed: parent.speed * 1.2,
+        elite: false,
+        type: "splitter",
+        slow: 0,
+        freeze: 0,
+        dashCd: 1200 + Math.random()*800,
+        dashTimer: 0,
+        splitChild: true,
+        boss: false
+      });
+    }
+  }
+
+  function spawnXPOrb(x, y, amount, maybePetChance = 0) {
+    orbs.push({
+      x, y,
+      vx:(Math.random()-0.5)*0.6,
+      vy:(Math.random()-0.5)*0.6,
+      r:4,
+      amount,
+      petChance: maybePetChance
+    });
+  }
+
+  function applyXP(amount) {
+    xp += amount;
+    while (xp >= xpToLevel) {
+      xp -= xpToLevel;
+      level++;
+      xpToLevel = Math.floor(xpToLevel * 1.35 + 10);
+      btnLevelup.disabled = false;
+      showUpgradeChoice();
+      addLog("LEVEL UP! Wybierz upgrade lub relikt.", true);
+      playTone(520, 0.12, "triangle");
+    }
+  }
+
+  function tryLevelUp() {
+    if (!btnLevelup.disabled && !choicePopup && !gameOver) {
+      showUpgradeChoice();
+    }
+  }
+
+  function showUpgradeChoice() {
+    if (choicePopup) return;
+    btnLevelup.disabled = true;
+
+    const wrapper = document.getElementById("game-wrapper");
+    const popup = document.createElement("div");
+    popup.className = "choice-popup";
+
+    const box = document.createElement("div");
+    box.className = "choice-box";
+
+    const title = document.createElement("div");
+    title.className = "choice-title";
+    title.textContent = "Wybierz upgrade – 5 opcji na większy chaos";
+    box.appendChild(title);
+
+    const row = document.createElement("div");
+    row.className = "choice-row";
+
+    const allChoices = [
+      ...Object.keys(upgradeConfigs).map(k => ({kind:"upgrade", key:k})),
+      ...Object.keys(relicConfigs).map(k => ({kind:"relic", key:k}))
+    ];
+
+    const picks = [];
+    while (picks.length < 5 && picks.length < allChoices.length) {
+      const item = allChoices[Math.floor(Math.random()*allChoices.length)];
+      if (!picks.find(p => p.kind === item.kind && p.key === item.key)) {
+        picks.push(item);
+      }
+    }
+
+    picks.forEach(choice => {
+      let cfg, rarityClass = "";
+      if (choice.kind === "upgrade") {
+        cfg = upgradeConfigs[choice.key];
+      } else {
+        cfg = relicConfigs[choice.key];
+        rarityClass =
+          cfg.rarity === "legendary" ? "choice-legendary" :
+          cfg.rarity === "epic" ? "choice-epic" :
+          cfg.rarity === "rare" ? "choice-rare" : "";
+      }
+
+      const card = document.createElement("div");
+      card.className = "choice-card " + rarityClass;
+
+      const tag = document.createElement("div");
+      tag.className = "choice-tag";
+      tag.textContent = choice.kind === "upgrade" ? "UPGRADE" : cfg.rarity.toUpperCase();
+
+      const name = document.createElement("div");
+      name.className = "choice-name";
+      name.textContent = cfg.name;
+
+      const desc = document.createElement("div");
+      desc.className = "choice-desc";
+      desc.textContent = cfg.desc + (choice.kind === "upgrade" ? " (Masz: " + upgrades[choice.key] + ")" : " (Masz: " + relics[choice.key] + ")");
+
+      card.appendChild(tag);
+      card.appendChild(name);
+      card.appendChild(desc);
+
+      card.addEventListener("click", () => {
+        if (choice.kind === "upgrade") {
+          upgrades[choice.key]++;
+          applyUpgradeStatEffects(choice.key);
+          addLog("Upgrade: " + cfg.name + " (+1 stack)", true);
+          playTone(660, 0.1, "square");
+        } else {
+          relics[choice.key]++;
+          addLog("Relikt: " + cfg.name + " (+1 stack)", true);
+          playTone(440, 0.1, "sine");
+        }
+
+        relicTimers.necroStaff = 0;
+        relicTimers.burningHeart = 0;
+        relicTimers.chaosEngine = 0;
+        relicTimers.frostCore = 0;
+
+        updateRelicUI();
+        wrapper.removeChild(popup);
+        choicePopup = null;
+      });
+
+      row.appendChild(card);
+    });
+
+    box.appendChild(row);
+    popup.appendChild(box);
+    wrapper.appendChild(popup);
+    choicePopup = popup;
+  }
+
+  function applyUpgradeStatEffects(key) {
+    if (key === "dmgUp") {
+      player.baseDamage += 6;
+      pets.forEach(p => p.dmg += 6 * 0.5);
+    }
+    if (key === "atkSpeedUp") {
+      player.fireRate *= 1.1;
+    }
+    if (key === "hpUp") {
+      player.maxHp += 20;
+      player.hp += 20;
+    }
+    if (key === "moveSpeedUp") {
+      player.baseSpeed = (player.baseSpeed || player.speed) + 0.3;
+      player.speed = player.baseSpeed;
+    }
+    if (key === "rangeUp") {
+      pets.forEach(p => p.range *= 1.1);
+    }
+  }
+
+  // Shooting
+  function spawnPlayerBullet(extra = false) {
+    const dx = mouseX - player.x;
+    const dy = mouseY - player.y;
+    const len = Math.hypot(dx,dy);
+    if (len === 0) return;
+    const angle = Math.atan2(dy, dx);
+    const spread = extra ? (Math.random()-0.5)*0.25 : (Math.random()-0.5)*0.12;
+    const speed = extra ? 6.2 : 5.0;
+
+    bullets.push({
+      x: player.x,
+      y: player.y,
+      vx: Math.cos(angle+spread)*speed,
+      vy: Math.sin(angle+spread)*speed,
+      r: 4,
+      dmg: player.baseDamage + upgrades.dmgUp*6,
+      life: 1400,
+      from: "player"
+    });
+  }
+
+  function tryReplicateBullet(b) {
+    if (relics.replicationOrb <= 0) return;
+    const baseChance = 0.10;
+    const chance = Math.min(0.85, baseChance + relics.replicationOrb * 0.07);
+    if (Math.random() < chance) {
+      const clones = 1 + Math.floor(relics.replicationOrb / 3);
+      for (let i = 0; i < clones; i++) {
+        const angle = Math.atan2(b.vy, b.vx) + (Math.random()-0.5)*0.6;
+        bullets.push({
+          x: b.x,
+          y: b.y,
+          vx: Math.cos(angle)*5,
+          vy: Math.sin(angle)*5,
+          r: 3,
+          dmg: b.dmg * 0.6,
+          life: 900,
+          from: b.from
+        });
+      }
+    }
+  }
+
+  function spawnPet(typeKey) {
+    if (pets.length >= 15) {
+      if (pets.length > 0) {
+        const p = pets[Math.floor(Math.random()*pets.length)];
+        petGainXP(p, 15);
+        addLog("Limit petów osiągnięty – wzmocniono: " + petTypes[p.type].name, true);
+      }
+      return;
+    }
+    const cfg = petTypes[typeKey];
+    const level = 1;
+    const dmg = cfg.baseDmg + upgrades.dmgUp*0.4;
+    const cd = cfg.baseCd;
+    const range = cfg.baseRange;
+    pets.push({
+      x: player.x + (Math.random()-0.5)*40,
+      y: player.y + (Math.random()-0.5)*40,
+      type: typeKey,
+      level,
+      dmg,
+      cd,
+      cdTimer: 0,
+      range,
+      angle: Math.random()*Math.PI*2,
+      xp: 0,
+      xpToLevel: 20,
+    });
+    updatePetsUI();
+  }
+
+  function tryPetDropFromEnemy(e) {
+    let chance = 0.03 + chaos*0.002;
+    if (e.elite) chance += 0.12;
+    if (e.boss) chance = 1.0;
+
+    if (Math.random() < chance) {
+      const petKeys = Object.keys(petTypes);
+      const key = petKeys[Math.floor(Math.random()*petKeys.length)];
+      spawnPet(key);
+      addLog("Drop peta: " + petTypes[key].name + "!", true);
+      playTone(780, 0.12, "square");
+    }
+  }
+
+  function petGainXP(p, amount) {
+    p.xp += amount;
+    while (p.xp >= p.xpToLevel) {
+      p.xp -= p.xpToLevel;
+      p.level++;
+      p.xpToLevel = Math.floor(p.xpToLevel*1.5+10);
+      p.dmg *= 1.15;
+      p.range *= 1.05;
+      addLog(petTypes[p.type].name + " osiągnął poziom " + p.level + "!", true);
+      playTone(640, 0.08, "triangle");
+      updatePetsUI();
+    }
+  }
+
+  function petTick(dt) {
+    const speedFactor = dt/16;
+    pets.forEach(p => {
+      const cfg = petTypes[p.type];
+      const powerMult = 1 + upgrades.petPower*0.10;
+      p.cdTimer -= dt;
+
+      p.x += (player.x - p.x) * 0.06 * speedFactor;
+      p.y += (player.y - p.y) * 0.06 * speedFactor;
+
+      if (cfg.role === "orbit") {
+        p.angle += 0.02 * speedFactor;
+        const orbitR = p.range;
+        p.x = player.x + Math.cos(p.angle)*orbitR;
+        p.y = player.y + Math.sin(p.angle)*orbitR;
+        enemies.forEach(e => {
+          const dist = Math.hypot(p.x - e.x, p.y - e.y);
+          if (dist < 8 + e.r) {
+            e.hp -= p.dmg * powerMult * 0.03 * speedFactor;
+          }
+        });
+      } else if (cfg.role === "ranged") {
+        if (p.cdTimer <= 0 && enemies.length > 0) {
+          p.cdTimer = Math.max(300, p.cd * (1 - upgrades.atkSpeedUp*0.1));
+          let nearest = null;
+          let bestDist = Infinity;
+          enemies.forEach(e => {
+            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+            if (dist < bestDist && dist <= p.range) {
+              bestDist = dist;
+              nearest = e;
+            }
+          });
+          if (nearest) {
+            const angle = Math.atan2(nearest.y - p.y, nearest.x - p.x);
+            bullets.push({
+              x: p.x,
+              y: p.y,
+              vx: Math.cos(angle)*4.4,
+              vy: Math.sin(angle)*4.4,
+              r: 3,
+              dmg: p.dmg * powerMult,
+              life: 1300,
+              from: "pet"
+            });
+          }
+        }
+      } else if (cfg.role === "laser") {
+        if (p.cdTimer <= 0 && enemies.length > 0) {
+          p.cdTimer = Math.max(900, p.cd * (1 - upgrades.atkSpeedUp*0.1));
+          let nearest = null;
+          let bestDist = Infinity;
+          enemies.forEach(e => {
+            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+            if (dist < bestDist) { bestDist = dist; nearest = e; }
+          });
+          if (nearest) {
+            const angle = Math.atan2(nearest.y - p.y, nearest.x - p.x);
+            enemies.forEach(e => {
+              const t = ((e.x - p.x)*Math.sin(angle) - (e.y - p.y)*(-Math.cos(angle)));
+              if (Math.abs(t) < 10) {
+                e.hp -= p.dmg * powerMult * 1.1;
+              }
+            });
+            ctx.save();
+            ctx.globalAlpha = 0.2;
+            ctx.strokeStyle = "#ffd980";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + Math.cos(angle)*W, p.y + Math.sin(angle)*W);
+            ctx.stroke();
+            ctx.restore();
+            playTone(900, 0.07, "sawtooth");
+          }
+        }
+      } else if (cfg.role === "chaos") {
+        if (p.cdTimer <= 0) {
+          p.cdTimer = Math.max(1200, p.cd * (1 - upgrades.atkSpeedUp*0.1));
+          const effect = Math.random();
+          if (effect < 0.4) {
+            enemies.forEach(e => {
+              const dist = Math.hypot(e.x - p.x, e.y - p.y);
+              if (dist < p.range) e.hp -= p.dmg * powerMult;
+            });
+            playTone(520, 0.06, "square");
+          } else {
+            for (let i = 0; i < 3; i++) {
+              bullets.push({
+                x: p.x,
+                y: p.y,
+                vx: (Math.random()-0.5)*5,
+                vy: (Math.random()-0.5)*5,
+                r: 3,
+                dmg: p.dmg * powerMult * 0.6,
+                life: 1100,
+                from: "pet"
+              });
+            }
+          }
+        }
+      } else if (cfg.role === "bomber") {
+        if (enemies.length > 0) {
+          let nearest = null;
+          let bestDist = Infinity;
+          enemies.forEach(e => {
+            const dist = Math.hypot(e.x - p.x, e.y - p.y);
+            if (dist < bestDist) { bestDist = dist; nearest = e; }
+          });
+          if (nearest) {
+            const ang = Math.atan2(nearest.y - p.y, nearest.x - p.x);
+            p.x += Math.cos(ang)*3*speedFactor;
+            p.y += Math.sin(ang)*3*speedFactor;
+            if (bestDist < p.range*0.4) {
+              enemies.forEach(e => {
+                const dist = Math.hypot(e.x - p.x, e.y - p.y);
+                if (dist < p.range*0.7*(1+upgrades.aoeUp*0.15)) {
+                  e.hp -= p.dmg * powerMult * 1.1;
+                }
+              });
+              playTone(200, 0.1, "square");
+              p.x = player.x + (Math.random()-0.5)*40;
+              p.y = player.y + (Math.random()-0.5)*40;
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function processRelics(dt) {
+    const dtMs = dt;
+    const aoeMult = 1 + upgrades.aoeUp*0.15;
+    const summonMult = 1 + upgrades.summonBoost*0.10;
+
+    // Necro Staff
+    if (relics.necroStaff > 0) {
+      let baseCd = 3500;
+      baseCd -= relics.necroStaff * 200;
+      baseCd = Math.max(1000, baseCd);
+      relicTimers.necroStaff += dtMs;
+      if (relicTimers.necroStaff >= baseCd) {
+        relicTimers.necroStaff = 0;
+        const count = 4 + relics.necroStaff * 2;
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random()*Math.PI*2;
+          bullets.push({
+            x: player.x,
+            y: player.y,
+            vx: Math.cos(angle)*4,
+            vy: Math.sin(angle)*4,
+            r: 4,
+            dmg: (12 + chaos*0.6) * summonMult,
+            life: 1400,
+            from: "summon"
+          });
+        }
+        addLog("Laska Nekromanty: fala minionów ("+count+").");
+        playTone(300, 0.08, "sawtooth");
+      }
+    }
+
+    // Burning Heart
+    if (relics.burningHeart > 0) {
+      relicTimers.burningHeart += dtMs;
+      let cd = 1100;
+      cd -= relics.burningHeart * 30;
+      cd = Math.max(250, cd);
+      if (relicTimers.burningHeart >= cd) {
+        relicTimers.burningHeart = 0;
+        const radius = (70 + relics.burningHeart * 8) * aoeMult;
+        const dmg = (14 + relics.burningHeart * 5 + chaos*1.2) * summonMult;
+        enemies.forEach(e => {
+          const dist = Math.hypot(e.x - player.x, e.y - player.y);
+          if (dist < radius) {
+            e.hp -= dmg;
+          }
+        });
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
+        ctx.fillStyle = "#ff6b3b";
+        ctx.fill();
+        ctx.restore();
+        playTone(500, 0.06, "square");
+      }
+    }
+
+    // Chaos Engine
+    if (relics.chaosEngine > 0) {
+      relicTimers.chaosEngine += dtMs;
+      let cd = 3600;
+      cd -= relics.chaosEngine * 180;
+      cd = Math.max(1200, cd); // min 1.2s
+      if (relicTimers.chaosEngine >= cd) {
+        relicTimers.chaosEngine = 0;
+        triggerChaosEngineEffect(aoeMult, summonMult);
+      }
+    }
+
+    // Frost Core
+    if (relics.frostCore > 0) {
+      const radius = (80 + relics.frostCore * 8) * aoeMult;
+      const slow = 0.5 + relics.frostCore * 0.05;
+      enemies.forEach(e => {
+        const dist = Math.hypot(e.x - player.x, e.y - player.y);
+        if (dist < radius) {
+          e.slow = Math.max(e.slow, slow);
+          if (relics.frostCore >= 5) {
+            e.freeze = Math.max(e.freeze, (relics.frostCore - 4) * 60);
+          }
+        }
+      });
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
+      ctx.fillStyle = "#4fd1ff";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Haste Circuit
+    if (relics.hasteCircuit > 0) {
+      player.speed = player.baseSpeed + relics.hasteCircuit * 0.25;
+      player.fireRate = 4.0 + relics.hasteCircuit * 0.4 + upgrades.atkSpeedUp*0.3;
+    } else {
+      player.speed = player.baseSpeed;
+      player.fireRate = 4.0 + upgrades.atkSpeedUp*0.3;
+    }
+  }
+
+  function triggerChaosEngineEffect(aoeMult, summonMult) {
+    const effects = ["meteor","laser","minions","explosion","timewarp"];
+    const effect = effects[Math.floor(Math.random()*effects.length)];
+    if (effect === "meteor") {
+      for (let i = 0; i < 4 + relics.chaosEngine*2; i++) {
+        const ex = Math.random()*W;
+        const ey = Math.random()*H;
+        enemies.forEach(e => {
+          const dist = Math.hypot(e.x - ex, e.y - ey);
+          if (dist < 90*aoeMult) e.hp -= (30 + chaos*2.5) * summonMult;
+        });
+      }
+      addLog("Chaos Engine: meteory spadają.", true);
+      playTone(260, 0.09, "sawtooth");
+    } else if (effect === "laser") {
+      enemies.forEach(e => { e.hp -= (22 + chaos*1.8) * summonMult; });
+      addLog("Chaos Engine: globalny laser.", true);
+      playTone(880, 0.07, "triangle");
+    } else if (effect === "minions") {
+      for (let i = 0; i < 6 + relics.chaosEngine*3; i++) {
+        const angle = Math.random()*Math.PI*2;
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle)*5,
+          vy: Math.sin(angle)*5,
+          r: 3,
+          dmg: (14 + chaos)*summonMult,
+          life: 1500,
+          from: "summon"
+        });
+      }
+      addLog("Chaos Engine: roje minionów.", true);
+      playTone(340, 0.08, "square");
+    } else if (effect === "explosion") {
+      enemies.forEach(e => {
+        const dist = Math.hypot(e.x - player.x, e.y - player.y);
+        if (dist < 160*aoeMult) e.hp -= (45 + chaos*3.2)*summonMult;
+      });
+      addLog("Chaos Engine: wybuch chaosu.", true);
+      playTone(180, 0.1, "square");
+    } else if (effect === "timewarp") {
+      enemies.forEach(e => { e.slow = Math.max(e.slow, 2.5); });
+      addLog("Chaos Engine: spowolnienie czasu dla wrogów.", true);
+      playTone(600, 0.08, "sine");
+    }
+  }
+
+  function update(dt) {
+    if (gameOver) return;
+
+    time += dt;
+    const speedFactor = dt/16;
+
+    let dx = 0, dy = 0;
+    if (keys["w"] || keys["arrowup"]) dy -= 1;
+    if (keys["s"] || keys["arrowdown"]) dy += 1;
+    if (keys["a"] || keys["arrowleft"]) dx -= 1;
+    if (keys["d"] || keys["arrowright"]) dx += 1;
+
+    let len = Math.hypot(dx,dy);
+    if (len > 0) {
+      dx /= len; dy /= len;
+      player.x += dx * player.speed * speedFactor;
+      player.y += dy * player.speed * speedFactor;
+    }
+    player.x = Math.max(16, Math.min(W-16, player.x));
+    player.y = Math.max(16, Math.min(H-16, player.y));
+
+    player.fireCooldown = (player.fireCooldown || 0) - dt/1000;
+    const baseInterval = 1 / player.fireRate;
+    if (player.fireCooldown <= 0) {
+      player.fireCooldown = baseInterval;
+      spawnPlayerBullet(false);
+    }
+    if (mouseDown && Math.random() < 0.35) {
+      spawnPlayerBullet(true);
+    }
+
+    bullets.forEach((b, idx) => {
+      b.x += b.vx;
+      b.y += b.vy;
+      b.life -= dt;
+      if (b.life <= 0 || b.x < -30 || b.x > W+30 || b.y < -30 || b.y > H+30) {
+        bullets.splice(idx,1);
+        return;
+      }
+      enemies.forEach(e => {
+        const dist = Math.hypot(b.x - e.x, b.y - e.y);
+        if (dist < b.r + e.r) {
+          e.hp -= b.dmg;
+          tryReplicateBullet(b);
+          b.life = 0;
+        }
+      });
+    });
+    for (let i = bullets.length-1; i>=0; i--) {
+      if (bullets[i].life <= 0) bullets.splice(i,1);
+    }
+
+    enemies.forEach(e => {
+      let speed = e.speed;
+      if (e.slow > 0) {
+        speed /= e.slow;
+        e.slow = Math.max(1, e.slow - dt*0.002);
+      }
+      if (e.freeze > 0) {
+        e.freeze -= dt;
+      } else {
+        if (e.type === "dashling") {
+          e.dashTimer -= dt;
+          const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+          const ang = Math.atan2(player.y - e.y, player.x - e.x);
+          if (e.dashTimer <= 0) {
+            e.dashTimer = e.dashCd;
+            e.x += Math.cos(ang)*speed*3*speedFactor;
+            e.y += Math.sin(ang)*speed*3*speedFactor;
+          } else {
+            e.x += Math.cos(ang)*speed*0.6*speedFactor;
+            e.y += Math.sin(ang)*speed*0.6*speedFactor;
+          }
+        } else {
+          const ang = Math.atan2(player.y - e.y, player.x - e.x);
+          e.x += Math.cos(ang)*speed*speedFactor;
+          e.y += Math.sin(ang)*speed*speedFactor;
+        }
+      }
+
+      const dist = Math.hypot(player.x - e.x, player.y - e.y);
+      if (dist < player.r + e.r) {
+        player.hp -= 0.09 * speedFactor * (e.elite ? 3 : 1) * enemyScale;
+      }
+    });
+
+    for (let i = enemies.length-1; i>=0; i--) {
+      if (enemies[i].hp <= 0) {
+        const e = enemies[i];
+        if (e.type === "splitter" && !e.splitChild) {
+          spawnSplitChildren(e);
+        }
+        const xpAmount = e.elite ? 7 : 3;
+        const petChance = e.boss ? 1.0 : (e.elite ? 0.35 : 0.08 + chaos*0.01);
+        spawnXPOrb(e.x, e.y, xpAmount, petChance);
+        tryPetDropFromEnemy(e);
+        enemies.splice(i,1);
+      }
+    }
+
+    petTick(dt);
+
+    orbs.forEach((o, idx) => {
+      o.x += o.vx*speedFactor;
+      o.y += o.vy*speedFactor;
+      const dist = Math.hypot(player.x - o.x, player.y - o.y);
+      if (dist < 18) {
+        applyXP(o.amount);
+        if (Math.random() < o.petChance) {
+          const keys = Object.keys(petTypes);
+          const key = keys[Math.floor(Math.random()*keys.length)];
+          spawnPet(key);
+          addLog("Dodatkowy drop peta: " + petTypes[key].name + "!", true);
+          playTone(820, 0.1, "square");
+        }
+        orbs.splice(idx,1);
+      }
+    });
+
+    if (enemies.length < Math.min(enemyLimit, 5 + chaos*2) && Math.random() < 0.01 + chaos*0.002) {
+      spawnEnemy(false);
+    }
+
+    if (Math.random() < 0.0007 + chaos*0.0001) {
+      wave++;
+      const isBossWave = wave % 5 === 0;
+      spawnEnemyWave(isBossWave);
+    }
+
+    processRelics(dt);
+
+    if (player.hp <= 0 && !gameOver) {
+      gameOver = true;
+      goText.textContent = "Dotarłeś do fali " + wave + ".";
+      gameOverOverlay.style.display = "flex";
+      playGameOverSound();
+    }
+
+    updateTopUI();
+    updatePetsUI();
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    const bg = ctx.createRadialGradient(W/2, H*0.3, 50, W/2, H/2, 600);
+    bg.addColorStop(0, "#181b3a");
+    bg.addColorStop(1, "#05050c");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    for (let i = 0; i < 50; i++) {
+      ctx.beginPath();
+      ctx.arc(Math.random()*W, Math.random()*H, Math.random()*2, 0, Math.PI*2);
+      ctx.fillStyle = "#3f4a9f";
+      ctx.fill();
+    }
+    ctx.restore();
+
+    enemies.forEach(e => {
+      ctx.beginPath();
+      let col = "#ffb347";
+      if (e.type === "swarm") col = "#ff6b6b";
+      if (e.type === "splitter") col = "#ffa05f";
+      if (e.type === "dashling") col = "#ffdf7b";
+      ctx.fillStyle = col;
+      ctx.globalAlpha = e.boss ? 0.95 : 0.9;
+      ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (e.elite || e.boss) {
+        ctx.beginPath();
+        ctx.strokeStyle = e.boss ? "rgba(255, 85, 255, 0.9)" : "rgba(255, 235, 134, 0.8)";
+        ctx.lineWidth = 2;
+        ctx.arc(e.x, e.y, e.r+3, 0, Math.PI*2);
+        ctx.stroke();
+      }
+    });
+
+    pets.forEach(p => {
+      const cfg = petTypes[p.type];
+      ctx.beginPath();
+      ctx.fillStyle = cfg.color;
+      ctx.fillRect(p.x-6, p.y-6, 12, 12);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(p.x-6, p.y-6, 12, 12);
+    });
+
+    bullets.forEach(b => {
+      ctx.beginPath();
+      if (b.from === "player") ctx.fillStyle = "#fff7a0";
+      else if (b.from === "enemy") ctx.fillStyle = "#ff6b6b";
+      else if (b.from === "pet") ctx.fillStyle = "#aefcff";
+      else ctx.fillStyle = "#ffd9a0";
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    orbs.forEach(o => {
+      ctx.beginPath();
+      ctx.fillStyle = "#7cffc0";
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    ctx.beginPath();
+    ctx.fillStyle = "#8ae2ff";
+    ctx.fillRect(player.x - player.r, player.y - player.r, player.r*2, player.r*2);
+    ctx.beginPath();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(player.x - player.r, player.y - player.r, player.r*2, player.r*2);
+
+    const hpRatio = player.hp / player.maxHp;
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(player.x-16, player.y - player.r - 10, 32, 4);
+    ctx.fillStyle = "#52ff8a";
+    ctx.fillRect(player.x-16, player.y - player.r - 10, 32*Math.max(0,Math.min(1,hpRatio)), 4);
+  }
+
+  function loop(ts) {
+    const dt = ts - lastTs;
+    lastTs = ts;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  resetGame();
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
