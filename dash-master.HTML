@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Arena Survival 2.2 – Final Boss Neon</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #10182a 0%, #020409 55%, #000000 100%);
+      color: #e6f7ff;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #gameContainer {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 820px;
+      height: 100vh;
+      padding: 14px 12px;
+      position: relative;
+    }
+
+    #hudTop {
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(0,255,204,0.12), rgba(0,140,255,0.08));
+      border: 1px solid rgba(0,255,204,0.3);
+      box-shadow: 0 0 10px rgba(0,255,204,0.15);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #d9faff;
+      backdrop-filter: blur(6px);
+    }
+
+    .badge span.value {
+      color: #00e5ff;
+      font-weight: 600;
+    }
+
+    #gameCanvas {
+      background: radial-gradient(circle at center, #050912 0%, #020308 60%, #000000 100%);
+      border-radius: 14px;
+      border: 1px solid rgba(0, 255, 204, 0.25);
+      box-shadow:
+        0 0 25px rgba(0, 0, 0, 0.9),
+        0 0 22px rgba(0, 255, 255, 0.2),
+        0 0 60px rgba(0, 120, 255, 0.3);
+      image-rendering: pixelated;
+    }
+
+    #barsWrapper {
+      width: 100%;
+      max-width: 640px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-container {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0, 20, 40, 0.9);
+      overflow: hidden;
+      border: 1px solid rgba(0,255,204,0.25);
+      box-shadow: 0 0 10px rgba(0,255,204,0.25);
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.12s linear;
+    }
+
+    #xpBar {
+      background: linear-gradient(90deg, #00ffcc, #00b0ff);
+    }
+
+    #staminaBar {
+      background: linear-gradient(90deg, #eaff4f, #00ffcc);
+    }
+
+    #bossBarContainer {
+      display: none;
+      border-color: rgba(0, 183, 255, 0.45);
+      box-shadow: 0 0 14px rgba(0, 183, 255, 0.5);
+    }
+
+    #bossBar {
+      background: linear-gradient(90deg, #00bfff, #00ffcc);
+    }
+
+    #bossLabel {
+      font-size: 11px;
+      opacity: 0.82;
+      margin-top: 2px;
+      text-align: center;
+      color: #9ad8ff;
+      text-shadow: 0 0 6px rgba(0,255,255,0.6);
+      display: none;
+    }
+
+    #sidePanel {
+      flex: 1;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 14px;
+      color: #d9faff;
+      border-left: 1px solid rgba(0, 255, 255, 0.08);
+      background: radial-gradient(circle at top left, rgba(0,255,255,0.08), transparent 55%);
+    }
+
+    #title {
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2px;
+      color: #e6fbff;
+      text-shadow:
+        0 0 14px rgba(0,255,255,0.75),
+        0 0 26px rgba(0,120,255,0.8);
+    }
+
+    #subtitle {
+      font-size: 11px;
+      opacity: 0.7;
+      color: #9ad8ff;
+    }
+
+    #controls {
+      font-size: 13px;
+      opacity: 0.9;
+      line-height: 1.45;
+      color: #cfeeff;
+    }
+
+    #controls b {
+      color: #e6fbff;
+    }
+
+    #startBtn {
+      margin-top: 8px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #00ffcc, #00b0ff);
+      color: #021018;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px;
+      box-shadow:
+        0 0 10px rgba(0,255,204,0.8),
+        0 0 20px rgba(0,120,255,0.8);
+      transition: transform 0.08s, box-shadow 0.08s, opacity 0.08s;
+      align-self: flex-start;
+    }
+
+    #startBtn:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 14px rgba(0,255,204,1),
+        0 0 30px rgba(0,140,255,1);
+    }
+
+    #startBtn:active {
+      transform: translateY(1px) scale(0.97);
+      opacity: 0.9;
+      box-shadow:
+        0 0 6px rgba(0,255,204,0.7),
+        0 0 16px rgba(0,140,255,0.7);
+    }
+
+    #upgradePanel {
+      background: radial-gradient(circle at top left, rgba(0,255,255,0.16), rgba(0,0,0,0.85));
+      border-radius: 10px;
+      border: 1px solid rgba(0,255,255,0.3);
+      padding: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+      box-shadow: 0 0 18px rgba(0,255,255,0.35);
+    }
+
+    .panel-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #e6fbff;
+      text-shadow: 0 0 6px rgba(0,255,255,0.7);
+    }
+
+    .upgrade-btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,255,255,0.28);
+      background: radial-gradient(circle at top, rgba(0,20,40,0.95), rgba(0,0,0,0.95));
+      color: #d9faff;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+      transition: background 0.08s, transform 0.08s, box-shadow 0.08s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upgrade-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg,
+        rgba(0,255,255,0.12),
+        transparent 20%,
+        transparent 80%,
+        rgba(0,255,255,0.12));
+      mix-blend-mode: screen;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s;
+    }
+
+    .upgrade-btn:hover::before {
+      opacity: 1;
+    }
+
+    .upgrade-btn:hover {
+      background: radial-gradient(circle at top, rgba(0,40,80,0.95), rgba(0,0,0,0.95));
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(0,255,255,0.6);
+    }
+
+    .upgrade-title {
+      font-weight: bold;
+    }
+
+    .rarity-common { color: #e0e0e0; }
+    .rarity-rare   { color: #4fd1ff; text-shadow: 0 0 6px rgba(0,191,255,0.8); }
+    .rarity-epic   { color: #00ffcc; text-shadow: 0 0 6px rgba(0,255,204,0.8); }
+
+    #log {
+      flex: 1;
+      background: radial-gradient(circle at top left, rgba(0,255,255,0.14), rgba(0,0,0,0.9));
+      border-radius: 10px;
+      border: 1px solid rgba(0,255,255,0.3);
+      padding: 8px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.3;
+      box-shadow: 0 0 20px rgba(0,255,255,0.35);
+    }
+
+    .log-entry { margin-bottom: 4px; }
+    .log-good { color: #7dffcf; }
+    .log-bad  { color: #ff6f9f; }
+    .log-info { color: #9ad8ff; }
+
+    #footerInfo {
+      font-size: 11px;
+      opacity: 0.7;
+      color: #8acaff;
+      margin-top: 4px;
+    }
+
+    /* Scrollbar subtelnie neonowy */
+    #log::-webkit-scrollbar {
+      width: 6px;
+    }
+    #log::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.5);
+    }
+    #log::-webkit-scrollbar-thumb {
+      background: linear-gradient(#00ffcc, #00b0ff);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="hudTop">
+      <div class="badge">Czas: <span id="timeSurvived" class="value">0.0</span>s</div>
+      <div class="badge">Poziom: <span id="playerLevel" class="value">1</span></div>
+      <div class="badge">HP: <span id="hp" class="value">100 / 100</span></div>
+      <div class="badge">Exp: <span id="xpText" class="value">0 / 20</span></div>
+      <div class="badge">Zabójstwa: <span id="kills" class="value">0</span></div>
+      <div class="badge">Prędkość: <span id="speedVal" class="value">1.00</span>x</div>
+      <div class="badge">Stamina: <span id="staminaText" class="value">100%</span></div>
+      <div class="badge">Best czas: <span id="bestTime" class="value">0.0</span>s</div>
+      <div class="badge">Best zabójstwa: <span id="bestKills" class="value">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+
+    <div id="barsWrapper">
+      <div class="bar-container">
+        <div id="xpBar" class="bar-fill"></div>
+      </div>
+      <div class="bar-container">
+        <div id="staminaBar" class="bar-fill"></div>
+      </div>
+      <div id="bossBarContainer" class="bar-container">
+        <div id="bossBar" class="bar-fill"></div>
+      </div>
+      <div id="bossLabel"></div>
+    </div>
+  </div>
+
+  <div id="sidePanel">
+    <div>
+      <div id="title">Arena Survival 2.2</div>
+      <div id="subtitle">Final Boss Edition · Neon C1 · Rare Shooter 5%</div>
+    </div>
+
+    <div id="controls">
+      <b>Sterowanie:</b><br>
+      WASD / Strzałki – ruch<br>
+      Spacja – dash (zjada staminę, zadaje obrażenia kontaktowe)<br>
+      Dash zadaje maksymalnie <b>1 trafienie na wroga</b> (boss też).<br>
+      Level up → wybór jednej z 3 run (Common / Rare / Epic).<br>
+      Co jakiś czas pojawia się boss z areną, fazą 2 i atakami bullet hell.<br>
+      <b>Rare shooter</b> (5% szansy na spawn) to mocniejszy przeciwnik, który strzela.
+    </div>
+
+    <button id="startBtn">Start / Restart Run</button>
+
+    <div id="upgradePanel"></div>
+
+    <div id="log"></div>
+
+    <div id="footerInfo">
+      Arena Survival 2.2 – pełni bossowie, rare shooter zamiast minibossa, dash fix, debug overlay.
+    </div>
+  </div>
+
+  <script>
+    /* ============================
+       REFERENCJE DO ELEMENTÓW
+    ============================ */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const timeSurvivedEl = document.getElementById("timeSurvived");
+    const playerLevelEl = document.getElementById("playerLevel");
+    const hpEl = document.getElementById("hp");
+    const xpTextEl = document.getElementById("xpText");
+    const killsEl = document.getElementById("kills");
+    const speedValEl = document.getElementById("speedVal");
+    const staminaTextEl = document.getElementById("staminaText");
+    const bestTimeEl = document.getElementById("bestTime");
+    const bestKillsEl = document.getElementById("bestKills");
+
+    const xpBarEl = document.getElementById("xpBar");
+    const staminaBarEl = document.getElementById("staminaBar");
+    const bossBarContainer = document.getElementById("bossBarContainer");
+    const bossBarEl = document.getElementById("bossBar");
+    const bossLabel = document.getElementById("bossLabel");
+
+    const startBtn = document.getElementById("startBtn");
+    const logEl = document.getElementById("log");
+    const upgradePanel = document.getElementById("upgradePanel");
+
+    /* ============================
+       GLOBALNE STANY
+    ============================ */
+    let running = false;
+    let lastTime = performance.now();
+    let timeSurvived = 0;
+
+    let enemies = [];
+    let projectiles = [];
+    let particles = [];
+    let damageNumbers = [];
+    let dashTrail = [];
+
+    let keys = {};
+
+    let kills = 0;
+    let bestTime = 0;
+    let bestKills = 0;
+
+    // spawn zwykłych wrogów + rare shooter
+    let baseSpawnInterval = 1.6;
+    let spawnTimer = 0;
+
+    // boss
+    let boss = null;
+    let bossAlive = false;
+    let bossSpawnTimer = 0;
+    let nextBossTime = 45;
+
+    let arenaLockActive = false;
+    let arenaX = canvas.width / 2;
+    let arenaY = canvas.height / 2;
+    let arenaRadius = 230;
+    let arenaTargetRadius = 230;
+
+    // efekty
+    let screenShake = 0;
+    let screenShakeIntensity = 0;
+    let bossIntroOverlay = 0;
+
+    /* ============================
+       GRACZ + PARAMETRY BAZOWE
+    ============================ */
+    const playerBase = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 10,
+      baseSpeed: 120,
+      maxHp: 100,
+      hp: 100,
+      level: 1,
+      xp: 0,
+      xpToNext: 20,
+      regenPerSec: 0,
+      dashTimer: 0,
+      dashDuration: 0.15,
+      dashActive: false,
+      dashSpeedMult: 3,
+      damageCooldown: 0,
+      damageCooldownTime: 0.6,
+      invincible: false,
+      knockbackX: 0,
+      knockbackY: 0,
+      knockbackTimer: 0,
+      staminaMax: 100,
+      stamina: 100,
+      staminaRegen: 35,
+      dashStaminaCost: 40,
+      slowmoTimer: 0,
+      dashDamageMult: 1,
+      dashEpic: false,
+      dashHitUsed: false // 1 hit per dash
+    };
+
+    let player = {};
+
+    /* ============================
+       RUNY I RZADKOŚCI
+    ============================ */
+    const rarities = {
+      common: { name: "Common", colorClass: "rarity-common", weight: 70 },
+      rare:   { name: "Rare",   colorClass: "rarity-rare",   weight: 23 },
+      epic:   { name: "Epic",   colorClass: "rarity-epic",   weight: 7  }
+    };
+
+    const allRunes = [
+      { id: "speed_1", name: "+10% speed", desc: "Szybszy ruch.", rarity: "common",
+        apply: () => { player.baseSpeed *= 1.10; } },
+      { id: "speed_2", name: "+18% speed", desc: "Duży boost prędkości.", rarity: "rare",
+        apply: () => { player.baseSpeed *= 1.18; } },
+      { id: "speed_3", name: "+30% speed (epic)", desc: "Turbo prędkość.", rarity: "epic",
+        apply: () => { player.baseSpeed *= 1.30; } },
+
+      { id: "hp_1", name: "+20 max HP", desc: "Więcej życia i lekkie leczenie.", rarity: "common",
+        apply: () => { player.maxHp += 20; player.hp = Math.min(player.maxHp, player.hp + 20); } },
+      { id: "hp_2", name: "+40 max HP", desc: "Solidny tank upgrade.", rarity: "rare",
+        apply: () => { player.maxHp += 40; player.hp = Math.min(player.maxHp, player.hp + 40); } },
+
+      { id: "regen_1", name: "+1.5 HP/s regen", desc: "Stała regeneracja zdrowia.", rarity: "common",
+        apply: () => { player.regenPerSec += 1.5; } },
+      { id: "regen_2", name: "+3 HP/s regen", desc: "Duża regeneracja.", rarity: "rare",
+        apply: () => { player.regenPerSec += 3; } },
+
+      { id: "dash_cost_1", name: "Tani dash", desc: "-8 kosztu staminy dasha.", rarity: "common",
+        apply: () => { player.dashStaminaCost = Math.max(10, player.dashStaminaCost - 8); } },
+      { id: "dash_cost_2", name: "Super tani dash", desc: "-15 kosztu staminy dasha.", rarity: "rare",
+        apply: () => { player.dashStaminaCost = Math.max(8, player.dashStaminaCost - 15); } },
+
+      { id: "stamina_1", name: "Więcej staminy", desc: "+25 maksymalnej staminy.", rarity: "common",
+        apply: () => { player.staminaMax += 25; player.stamina = player.staminaMax; } },
+      { id: "stamina_regen_1", name: "Więcej regen staminy", desc: "+12 regen staminy/s.", rarity: "rare",
+        apply: () => { player.staminaRegen += 12; } },
+
+      { id: "iframes_1", name: "Dłuższe i-frames", desc: "+0.2s nieśmiertelności po trafieniu.", rarity: "common",
+        apply: () => { player.damageCooldownTime += 0.2; } },
+
+      { id: "dash_damage_1", name: "Dash dmg booster", desc: "+25% obrażeń dasha.", rarity: "rare",
+        apply: () => { player.dashDamageMult *= 1.25; } },
+      { id: "dash_damage_2", name: "Epic dash build", desc: "+50% dmg dasha, mocniejszy screen shake.", rarity: "epic",
+        apply: () => { player.dashDamageMult *= 1.5; player.dashEpic = true; } }
+    ];
+
+    let ownedRunes = [];
+
+    /* ============================
+       LOG / BEST SCORE / UTILS
+    ============================ */
+    function addLog(text, type = "info") {
+      const div = document.createElement("div");
+      div.classList.add("log-entry");
+      if (type === "good") div.classList.add("log-good");
+      else if (type === "bad") div.classList.add("log-bad");
+      else div.classList.add("log-info");
+      div.textContent = text;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function loadBestScores() {
+      const bt = localStorage.getItem("arena22_best_time");
+      const bk = localStorage.getItem("arena22_best_kills");
+      bestTime = bt ? parseFloat(bt) : 0;
+      bestKills = bk ? parseInt(bk) : 0;
+      bestTimeEl.textContent = bestTime.toFixed(1);
+      bestKillsEl.textContent = bestKills;
+    }
+
+    function saveBestScores() {
+      if (timeSurvived > bestTime) {
+        bestTime = timeSurvived;
+        localStorage.setItem("arena22_best_time", bestTime.toString());
+      }
+      if (kills > bestKills) {
+        bestKills = kills;
+        localStorage.setItem("arena22_best_kills", kills.toString());
+      }
+      bestTimeEl.textContent = bestTime.toFixed(1);
+      bestKillsEl.textContent = bestKills;
+    }
+
+    function resetPlayer() {
+      player = JSON.parse(JSON.stringify(playerBase));
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      ownedRunes = [];
+    }
+
+    function distanceSquared(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return dx*dx + dy*dy;
+    }
+    /* ============================
+       DAMAGE NUMBERS + DASH TRAIL
+    ============================ */
+    function spawnDamageNumber(x, y, amount, type="normal") {
+      let color = "#ffffff";
+      let size = 14;
+      if (type === "enemy")   color = "#ff6666";
+      if (type === "rare")    color = "#66ff99";
+      if (type === "boss")    color = "#00e5ff";
+      if (type === "crit") {  color = "#ffff66"; size = 20; }
+
+      damageNumbers.push({
+        x, y,
+        amount,
+        color,
+        size,
+        life: 0.8,
+        vy: -40 - Math.random() * 20
+      });
+    }
+
+    function updateDamageNumbers(dt) {
+      damageNumbers.forEach(n => {
+        n.y += n.vy * dt;
+        n.life -= dt;
+      });
+      damageNumbers = damageNumbers.filter(n => n.life > 0);
+    }
+
+    function drawDamageNumbers() {
+      ctx.save();
+      damageNumbers.forEach(n => {
+        ctx.globalAlpha = Math.max(0, n.life);
+        ctx.fillStyle = n.color;
+        ctx.font = `${n.size}px Arial`;
+        ctx.fillText(n.amount, n.x, n.y);
+      });
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function addDashTrail(x, y) {
+      dashTrail.push({ x, y, life: 0.4 });
+    }
+
+    function updateDashTrail(dt) {
+      dashTrail.forEach(t => t.life -= dt);
+      dashTrail = dashTrail.filter(t => t.life > 0);
+    }
+
+    function drawDashTrail() {
+      ctx.save();
+      dashTrail.forEach(t => {
+        ctx.globalAlpha = t.life;
+        ctx.fillStyle = "#00ffff";
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function spawnParticles(x, y, color) {
+      for (let i = 0; i < 6; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 80,
+          vy: (Math.random() - 0.5) * 80,
+          life: 0.5 + Math.random() * 0.4,
+          color
+        });
+      }
+    }
+
+    /* ============================
+       INPUT
+    ============================ */
+    window.addEventListener("keydown", (e) => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.code === "Space") {
+        if (!keys["space"]) attemptDash();
+        keys["space"] = true;
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      keys[e.key.toLowerCase()] = false;
+      if (e.code === "Space") keys["space"] = false;
+    });
+
+    function attemptDash() {
+      if (!running) return;
+      if (player.stamina < player.dashStaminaCost) return;
+
+      player.dashActive = true;
+      player.dashTimer = player.dashDuration;
+      player.stamina -= player.dashStaminaCost;
+      player.dashHitUsed = false;   // 1 hit per dash – reset przy starcie dasha
+    }
+
+    /* ============================
+       ROLL RARITY + RUNES
+    ============================ */
+    function rollRarity() {
+      const r = Math.random() * 100;
+      let acc = 0;
+      for (const key of ["common","rare","epic"]) {
+        acc += rarities[key].weight;
+        if (r <= acc) return key;
+      }
+      return "common";
+    }
+
+    function getRandomRunes(count) {
+      const result = [];
+      const usedIds = new Set();
+      for (let i = 0; i < count; i++) {
+        const rarity = rollRarity();
+        const pool = allRunes.filter(r => r.rarity === rarity && !usedIds.has(r.id));
+        if (pool.length === 0) continue;
+        const rune = pool[Math.floor(Math.random() * pool.length)];
+        usedIds.add(rune.id);
+        result.push(rune);
+      }
+      return result;
+    }
+
+    function gainXP(amount) {
+      player.xp += amount;
+      while (player.xp >= player.xpToNext) {
+        player.xp -= player.xpToNext;
+        player.level++;
+        player.xpToNext = Math.floor(player.xpToNext * 1.4 + 5);
+        onLevelUp();
+      }
+      updateHUD();
+    }
+
+    function onLevelUp() {
+      addLog("Poziom " + player.level + "! Wybierz run.", "good");
+      playerLevelEl.textContent = player.level;
+      openRunePanel();
+    }
+
+    function openRunePanel() {
+      upgradePanel.innerHTML = "";
+      upgradePanel.style.display = "flex";
+      const title = document.createElement("div");
+      title.className = "panel-title";
+      title.textContent = "Wybierz run (Common / Rare / Epic):";
+      upgradePanel.appendChild(title);
+
+      const options = getRandomRunes(3);
+      if (options.length === 0) {
+        addLog("Brak run (bug?), kontynuuję grę.", "info");
+        upgradePanel.style.display = "none";
+        return;
+      }
+
+      options.forEach(rune => {
+        const rarityInfo = rarities[rune.rarity];
+        const btn = document.createElement("button");
+        btn.className = "upgrade-btn";
+        btn.innerHTML = `
+          <div class="upgrade-title ${rarityInfo.colorClass}">${rune.name} [${rarityInfo.name}]</div>
+          <div>${rune.desc}</div>
+        `;
+        btn.addEventListener("click", () => {
+          rune.apply();
+          ownedRunes.push(rune.id);
+          addLog("Wybrano run: " + rune.name + " (" + rarityInfo.name + ")", "good");
+          upgradePanel.style.display = "none";
+          lastTime = performance.now();
+        });
+        upgradePanel.appendChild(btn);
+      });
+    }
+
+    /* ============================
+       HUD
+    ============================ */
+    function updateHUD() {
+      timeSurvivedEl.textContent = timeSurvived.toFixed(1);
+      playerLevelEl.textContent = player.level;
+      hpEl.textContent = Math.floor(player.hp) + " / " + player.maxHp;
+      xpTextEl.textContent = Math.floor(player.xp) + " / " + player.xpToNext;
+      killsEl.textContent = kills;
+      speedValEl.textContent = (player.baseSpeed / 120).toFixed(2);
+      const xpPercent = (player.xp / player.xpToNext) * 100;
+      xpBarEl.style.width = Math.min(100, xpPercent) + "%";
+      const staminaPercent = (player.stamina / player.staminaMax) * 100;
+      staminaBarEl.style.width = Math.max(0, Math.min(100, staminaPercent)) + "%";
+      staminaTextEl.textContent = Math.round(staminaPercent) + "%";
+    }
+
+    /* ============================
+       ENEMIES (inkl. RARE SHOOTER 5%)
+    ============================ */
+    function spawnEnemy() {
+      const margin = 20;
+      let x, y;
+      const side = Math.floor(Math.random() * 4);
+      if (side === 0) { x = Math.random() * canvas.width; y = -margin; }
+      else if (side === 1) { x = Math.random() * canvas.width; y = canvas.height + margin; }
+      else if (side === 2) { x = -margin; y = Math.random() * canvas.height; }
+      else { x = canvas.width + margin; y = Math.random() * canvas.height; }
+
+      const t = timeSurvived;
+
+      // domyślnie normal
+      let type = "normal";
+
+      // 5% szansy na rare shootera
+      if (Math.random() < 0.05) {
+        type = "rare_shooter";
+      }
+
+      const enemy = {
+        x,
+        y,
+        type,
+        radius: 8,
+        speed: 45,
+        hp: 2,
+        maxHp: 2,
+        color: "#ff5555",
+        shootTimer: 0
+      };
+
+      if (type === "normal") {
+        // skalowanie trudności
+        enemy.radius = 8;
+        enemy.speed = 50 + Math.random() * 15 + t * 0.05;
+        enemy.hp = 2 + Math.floor(t / 40);
+        enemy.maxHp = enemy.hp;
+        enemy.color = "#ff5555";
+      } else if (type === "rare_shooter") {
+        enemy.radius = 13;
+        enemy.speed = 55 + t * 0.04;
+        enemy.hp = 10 + Math.floor(t / 20);
+        enemy.maxHp = enemy.hp;
+        enemy.color = "#00ff99";
+        enemy.shootTimer = 1 + Math.random() * 1;
+      }
+
+      enemies.push(enemy);
+    }
+
+    function rareShooterAttack(e) {
+      const angle = Math.atan2(player.y - e.y, player.x - e.x);
+      const speed = 160 + timeSurvived * 0.4;
+
+      projectiles.push({
+        x: e.x,
+        y: e.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: 6,
+        color: "rgba(0,255,204,0.9)",
+        damage: 12 + Math.floor(timeSurvived / 30),
+        life: 3,
+        type: "rare_bullet"
+      });
+    }
+
+    /* ============================
+       BOSS SETUP (FULL HARDCORE)
+    ============================ */
+    const bossTypes = ["reaper", "crusher", "orb_master"];
+
+    function spawnBoss() {
+      bossAlive = true;
+      enemies = [];
+      arenaLockActive = true;
+      arenaX = canvas.width / 2;
+      arenaY = canvas.height / 2;
+      arenaRadius = 230;
+      arenaTargetRadius = 230;
+
+      const phaseIndex = Math.floor(timeSurvived / 45) + 1;
+      const typeRoll = phaseIndex % 3;
+      const bossType = bossTypes[typeRoll];
+
+      if (bossType === "reaper") {
+        boss = {
+          type: "reaper",
+          name: "Pustynny Żniwiarz",
+          x: canvas.width / 2,
+          y: -80,
+          radius: 26,
+          color: "#ff5577",
+          maxHp: 500 + phaseIndex * 160,
+          hp: 500 + phaseIndex * 160,
+          speed: 80,
+          state: "intro",
+          introTime: 2,
+          attackTimer: 1.4,
+          attackCooldown: 3,
+          phase: 1
+        };
+      } else if (bossType === "crusher") {
+        boss = {
+          type: "crusher",
+          name: "Żelazny Najeźdźca",
+          x: canvas.width / 2,
+          y: canvas.height + 80,
+          radius: 32,
+          color: "#ffaa33",
+          maxHp: 620 + phaseIndex * 180,
+          hp: 620 + phaseIndex * 180,
+          speed: 85,
+          state: "intro",
+          introTime: 2,
+          attackTimer: 1.4,
+          attackCooldown: 3.3,
+          phase: 1
+        };
+      } else {
+        boss = {
+          type: "orb_master",
+          name: "Mistrz Orbit",
+          x: canvas.width + 80,
+          y: canvas.height / 2,
+          radius: 24,
+          color: "#66aaff",
+          maxHp: 560 + phaseIndex * 170,
+          hp: 560 + phaseIndex * 170,
+          speed: 78,
+          state: "intro",
+          introTime: 2,
+          attackTimer: 1.2,
+          attackCooldown: 2.8,
+          orbitAngle: 0,
+          phase: 1
+        };
+      }
+
+      addLog("BOSS NADCHODZI: " + boss.name + "!", "bad");
+      bossBarContainer.style.display = "block";
+      bossLabel.style.display = "block";
+      bossLabel.textContent = boss.name + " – 100% HP";
+
+      bossIntroOverlay = 1;
+      screenShake = 1.0;
+      screenShakeIntensity = 14;
+
+      baseSpawnInterval *= 1.4;
+    }
+
+    function bossTakeDamage(amount) {
+      if (!bossAlive || !boss) return;
+      boss.hp -= amount;
+      if (boss.hp <= 0) {
+        boss.hp = 0;
+        onBossDefeated();
+      }
+    }
+
+    function onBossDefeated() {
+      addLog("Pokonałeś bossa: " + boss.name + "!", "good");
+      bossAlive = false;
+      boss = null;
+      bossBarContainer.style.display = "none";
+      bossLabel.style.display = "none";
+      arenaLockActive = false;
+      gainXP(100);
+      player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.35);
+      addLog("Leczenie + exp za bossa.", "good");
+      nextBossTime += 55;
+      baseSpawnInterval *= 0.85;
+    }
+
+    function bossUpdate(dt) {
+      if (!bossAlive || !boss) return;
+
+      if (boss.phase === 1 && boss.hp <= boss.maxHp * 0.5) {
+        boss.phase = 2;
+        boss.attackCooldown *= 0.75;
+        boss.speed *= 1.2;
+        boss.color = "#00bfff";
+        addLog(boss.name + " wchodzi w FAZĘ 2! Arena się kurczy!", "bad");
+        screenShake = 1.2;
+        screenShakeIntensity = 18;
+        arenaTargetRadius = 170;
+      }
+
+      if (boss.state === "intro") {
+        boss.introTime -= dt;
+        if (boss.type === "reaper") {
+          boss.y += boss.speed * dt;
+          if (boss.y > canvas.height / 3) boss.y = canvas.height / 3;
+        } else if (boss.type === "crusher") {
+          boss.y -= boss.speed * dt;
+          if (boss.y < canvas.height * 0.7) boss.y = canvas.height * 0.7;
+        } else if (boss.type === "orb_master") {
+          boss.x -= boss.speed * dt;
+          if (boss.x < canvas.width * 0.7) boss.x = canvas.width * 0.7;
+        }
+        if (boss.introTime <= 0) {
+          boss.state = "fight";
+          addLog(boss.name + ": Walka rozpoczęta!", "bad");
+        }
+        return;
+      }
+
+      const ratio = boss.hp / boss.maxHp;
+      bossBarEl.style.width = Math.max(0, Math.min(1, ratio)) * 100 + "%";
+      bossLabel.textContent = boss.name + " – " + Math.round(ratio * 100) + "% HP";
+
+      if (arenaLockActive) {
+        const diff = arenaTargetRadius - arenaRadius;
+        arenaRadius += diff * Math.min(1, dt * 2.5);
+      }
+
+      boss.attackTimer -= dt;
+      if (boss.attackTimer <= 0) chooseBossAttack();
+
+      const dx = player.x - boss.x;
+      const dy = player.y - boss.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      let moveFactor = (boss.type === "crusher") ? 0.6 : 0.45;
+      boss.x += (dx / dist) * boss.speed * dt * moveFactor;
+      boss.y += (dy / dist) * boss.speed * dt * moveFactor;
+
+      boss.x = Math.max(boss.radius, Math.min(canvas.width - boss.radius, boss.x));
+      boss.y = Math.max(boss.radius, Math.min(canvas.height - boss.radius, boss.y));
+    }
+
+    function chooseBossAttack() {
+      if (!boss) return;
+      if (boss.phase === 2) {
+        if (boss.type === "reaper") {
+          reaperFanProjectiles();
+          reaperSlashLine();
+          boss.attackTimer = boss.attackCooldown * 0.7;
+          return;
+        }
+        if (boss.type === "crusher") {
+          crusherShockwave();
+          crusherBulletRain();
+          boss.attackTimer = boss.attackCooldown * 0.75;
+          return;
+        }
+        if (boss.type === "orb_master") {
+          orbMasterSpiral();
+          orbMasterSnipe();
+          boss.attackTimer = boss.attackCooldown * 0.7;
+          return;
+        }
+      }
+
+      const roll = Math.random();
+      if (boss.type === "reaper") {
+        if (roll < 0.35) reaperCharge();
+        else if (roll < 0.7) reaperFanProjectiles();
+        else reaperSlashLine();
+      } else if (boss.type === "crusher") {
+        if (roll < 0.34) crusherShockwave();
+        else if (roll < 0.68) crusherBulletRain();
+        else crusherSummonTanks();
+      } else if (boss.type === "orb_master") {
+        if (roll < 0.34) orbMasterOrbits();
+        else if (roll < 0.68) orbMasterSpiral();
+        else orbMasterSnipe();
+      }
+      boss.attackTimer = boss.attackCooldown;
+    }
+
+    /* ============================
+       BOSS ATTACKS
+    ============================ */
+    function reaperCharge() {
+      addLog("Boss: Szarża Żniwiarza!", "bad");
+      const dx = player.x - boss.x;
+      const dy = player.y - boss.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const vx = (dx / dist) * 260;
+      const vy = (dy / dist) * 260;
+      projectiles.push({
+        x: boss.x,
+        y: boss.y,
+        vx,
+        vy,
+        radius: boss.radius,
+        color: "rgba(0,191,255,0.6)",
+        damage: 32,
+        life: 0.7,
+        type: "boss_charge"
+      });
+    }
+
+    function reaperFanProjectiles() {
+      addLog("Boss: Fala ostrzy!", "bad");
+      const count = 11;
+      const baseAngle = Math.atan2(player.y - boss.y, player.x - boss.x);
+      const spread = Math.PI / 1.7;
+      for (let i = 0; i < count; i++) {
+        const t = i / (count - 1);
+        const angle = baseAngle - spread / 2 + spread * t;
+        const speed = 170;
+        projectiles.push({
+          x: boss.x,
+          y: boss.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: 5,
+          color: "rgba(0,255,255,0.9)",
+          damage: 16,
+          life: 2.2,
+          type: "boss_blade"
+        });
+      }
+    }
+
+    function reaperSlashLine() {
+      addLog("Boss: Linie cięcia!", "bad");
+      const directions = [ -0.4, 0, 0.4 ];
+      directions.forEach(offset => {
+        const angle = Math.atan2(player.y - boss.y, player.x - boss.x) + offset;
+        for (let i = 0; i < 4; i++) {
+          const dist = 40 + i * 30;
+          projectiles.push({
+            x: boss.x + Math.cos(angle) * dist,
+            y: boss.y + Math.sin(angle) * dist,
+            vx: 0,
+            vy: 0,
+            radius: 10,
+            color: "rgba(0,191,255,0.25)",
+            damage: 20,
+            life: 1.2,
+            type: "boss_zone"
+          });
+        }
+      });
+    }
+
+    function crusherShockwave() {
+      addLog("Boss: Fala uderzeniowa!", "bad");
+      const ringCount = 3;
+      for (let i = 1; i <= ringCount; i++) {
+        const radius = 40 + i * 30;
+        projectiles.push({
+          x: boss.x,
+          y: boss.y,
+          vx: 0,
+          vy: 0,
+          radius,
+          color: "rgba(0,191,255,0.18)",
+          damage: 18,
+          life: 1.5,
+          type: "boss_wave"
+        });
+      }
+    }
+
+    function crusherBulletRain() {
+      addLog("Boss: Deszcz pocisków!", "bad");
+      const count = 18;
+      for (let i = 0; i < count; i++) {
+        const x = (canvas.width / (count + 1)) * (i + 1);
+        const y = -20;
+        const speed = 170;
+        projectiles.push({
+          x, y,
+          vx: 0,
+          vy: speed,
+          radius: 6,
+          color: "rgba(0,191,255,0.9)",
+          damage: 14,
+          life: 3,
+          type: "boss_rain"
+        });
+      }
+    }
+
+    function crusherSummonTanks() {
+      addLog("Boss: Przywołuje tanki!", "bad");
+      for (let i = 0; i < 3; i++) {
+        const angle = (Math.PI * 2 / 3) * i;
+        const dist = 80;
+        const x = boss.x + Math.cos(angle) * dist;
+        const y = boss.y + Math.sin(angle) * dist;
+        enemies.push({
+          x, y,
+          radius: 14,
+          speed: 45,
+          color: "#00bfff",
+          hp: 5,
+          maxHp: 5,
+          type: "normal",
+          shootTimer: 0
+        });
+      }
+    }
+
+    function orbMasterOrbits() {
+      addLog("Boss: Kręcące się orby!", "bad");
+      const count = 6;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i;
+        projectiles.push({
+          x: boss.x,
+          y: boss.y,
+          vx: 0,
+          vy: 0,
+          radius: 8,
+          color: "rgba(0,255,255,0.9)",
+          damage: 14,
+          life: 3.5,
+          type: "boss_orbit",
+          baseAngle: angle,
+          orbitRadius: 42,
+          orbitSpeed: 2.6
+        });
+      }
+    }
+
+    function orbMasterSpiral() {
+      addLog("Boss: Spiralne pociski!", "bad");
+      const count = 22;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i;
+        const speed = 130;
+        projectiles.push({
+          x: boss.x,
+          y: boss.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: 4,
+          color: "rgba(0,225,255,0.9)",
+          damage: 11,
+          life: 4,
+          type: "boss_spiral"
+        });
+      }
+    }
+
+    function orbMasterSnipe() {
+      addLog("Boss: Szybkie strzały!", "bad");
+      const salvos = 3;
+      for (let s = 0; s < salvos; s++) {
+        const dx = player.x - boss.x;
+        const dy = player.y - boss.y;
+        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.25;
+        const speed = 240;
+        projectiles.push({
+          x: boss.x,
+          y: boss.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: 5,
+          color: "rgba(0,255,204,0.9)",
+          damage: 18,
+          life: 2,
+          type: "boss_snipe"
+        });
+      }
+    }
+    /* ============================
+       PLAYER / GAME UPDATE
+    ============================ */
+    function applyScreenShake() {
+      if (screenShake > 0) {
+        screenShake -= 0.08;
+        if (screenShake < 0) screenShake = 0;
+        const dx = (Math.random() - 0.5) * screenShakeIntensity;
+        const dy = (Math.random() - 0.5) * screenShakeIntensity;
+        ctx.translate(dx, dy);
+      }
+    }
+
+    function update(dt) {
+      if (!running) return;
+
+      let simDt = dt;
+      if (player.slowmoTimer > 0) {
+        simDt *= 0.4;
+        player.slowmoTimer -= dt;
+        if (player.slowmoTimer < 0) player.slowmoTimer = 0;
+      }
+
+      timeSurvived += simDt;
+      baseSpawnInterval = Math.max(0.4, 1.6 - timeSurvived / 60 * 0.25);
+
+      if (player.damageCooldown > 0) {
+        player.damageCooldown -= simDt;
+        if (player.damageCooldown <= 0) {
+          player.damageCooldown = 0;
+          player.invincible = false;
+        }
+      }
+
+      player.stamina += player.staminaRegen * simDt;
+      if (player.stamina > player.staminaMax) player.stamina = player.staminaMax;
+      if (player.stamina < 0) player.stamina = 0;
+
+      if (player.knockbackTimer > 0) {
+        player.x += player.knockbackX * simDt;
+        player.y += player.knockbackY * simDt;
+        player.knockbackTimer -= simDt;
+        if (player.knockbackTimer <= 0) {
+          player.knockbackTimer = 0;
+          player.knockbackX = 0;
+          player.knockbackY = 0;
+        }
+      }
+
+      let moveX = 0, moveY = 0;
+      if (keys["w"] || keys["arrowup"]) moveY -= 1;
+      if (keys["s"] || keys["arrowdown"]) moveY += 1;
+      if (keys["a"] || keys["arrowleft"]) moveX -= 1;
+      if (keys["d"] || keys["arrowright"]) moveX += 1;
+      let len = Math.hypot(moveX, moveY);
+      if (len > 0) { moveX /= len; moveY /= len; }
+
+      let speed = player.baseSpeed;
+      if (player.dashActive) speed *= player.dashSpeedMult;
+      player.x += moveX * speed * simDt;
+      player.y += moveY * speed * simDt;
+      if (player.dashActive) addDashTrail(player.x, player.y);
+
+      if (arenaLockActive) {
+        const dx = player.x - arenaX;
+        const dy = player.y - arenaY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > arenaRadius - player.radius) {
+          const angle = Math.atan2(dy, dx);
+          player.x = arenaX + Math.cos(angle) * (arenaRadius - player.radius);
+          player.y = arenaY + Math.sin(angle) * (arenaRadius - player.radius);
+        }
+      } else {
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+      }
+
+      if (player.dashActive) {
+        player.dashTimer -= simDt;
+        if (player.dashTimer <= 0) {
+          player.dashActive = false;
+          player.dashTimer = 0;
+          player.dashHitUsed = false; // reset po zakończeniu dasha
+        }
+      }
+
+      if (player.regenPerSec > 0 && player.hp > 0 && player.hp < player.maxHp) {
+        player.hp = Math.min(player.maxHp, player.hp + player.regenPerSec * simDt);
+      }
+
+      if (!bossAlive) {
+        bossSpawnTimer += simDt;
+        if (bossSpawnTimer >= nextBossTime) {
+          bossSpawnTimer = 0;
+          spawnBoss();
+        }
+      } else {
+        bossUpdate(simDt);
+      }
+
+      spawnTimer += simDt;
+      if (!bossAlive) {
+        if (spawnTimer >= baseSpawnInterval) {
+          spawnTimer = 0;
+          let waves = 1 + Math.floor(timeSurvived / 60);
+          for (let i = 0; i < waves; i++) spawnEnemy();
+        }
+      }
+
+      enemies.forEach(e => {
+        const dx = player.x - e.x;
+        const dy = player.y - e.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        e.x += (dx / dist) * e.speed * simDt;
+        e.y += (dy / dist) * e.speed * simDt;
+
+        if (e.type === "rare_shooter") {
+          e.shootTimer -= simDt;
+          if (e.shootTimer <= 0) {
+            rareShooterAttack(e);
+            e.shootTimer = 1.5;
+          }
+        }
+      });
+
+      const damageBase = 14;
+      const playerPos = { x: player.x, y: player.y };
+      const newEnemies = [];
+      enemies.forEach(e => {
+        const dist2 = distanceSquared(playerPos, e);
+        const minDist = player.radius + e.radius;
+        if (dist2 < minDist * minDist) {
+          if (player.dashActive && !player.dashHitUsed) {
+            player.dashHitUsed = true;
+
+            let dmg = 26 * player.dashDamageMult;
+            if (e.type === "rare_shooter") dmg *= 1.2;
+
+            e.hp -= dmg;
+            spawnParticles(e.x, e.y, e.color);
+            spawnDamageNumber(e.x, e.y, Math.floor(dmg), e.type === "rare_shooter" ? "rare" : "enemy");
+
+            if (e.hp <= 0) {
+              kills++;
+              gainXP(e.type === "rare_shooter" ? 16 : 6);
+            }
+          } else if (!player.invincible) {
+            let dmg = damageBase;
+            if (e.type === "rare_shooter") dmg = 20;
+
+            player.hp -= dmg;
+            player.damageCooldown = player.damageCooldownTime;
+            player.invincible = true;
+            player.slowmoTimer = 0.18;
+
+            const dx = player.x - e.x;
+            const dy = player.y - e.y;
+            const dist = Math.hypot(dx, dy) || 1;
+            const kbSpeed = 230;
+            player.knockbackX = (dx / dist) * kbSpeed;
+            player.knockbackY = (dy / dist) * kbSpeed;
+            player.knockbackTimer = 0.12;
+
+            addLog("Otrzymujesz " + Math.floor(dmg) + " obrażeń od " + e.type + ".", "bad");
+            spawnParticles(player.x, player.y, "#00e5ff");
+            if (player.hp <= 0) {
+              player.hp = 0;
+              gameOver();
+            }
+          }
+        }
+        if (e.hp > 0) newEnemies.push(e);
+      });
+      enemies = newEnemies;
+
+      if (bossAlive && boss && boss.state === "fight") {
+        const dx = player.x - boss.x;
+        const dy = player.y - boss.y;
+        const dist2 = dx*dx + dy*dy;
+        const minDist = player.radius + boss.radius;
+        if (dist2 < minDist * minDist) {
+          if (player.dashActive && !player.dashHitUsed) {
+            player.dashHitUsed = true;
+
+            let dmg = 45 * player.dashDamageMult;
+            let type = "boss";
+            if (player.dashEpic) {
+              screenShake = 1.0;
+              screenShakeIntensity = 20;
+              type = "crit";
+            }
+            bossTakeDamage(dmg);
+            spawnParticles(boss.x, boss.y, "#00e5ff");
+            spawnDamageNumber(boss.x, boss.y, Math.floor(dmg), type);
+            addLog("Trafiasz bossa dashem za " + Math.floor(dmg) + "!", "good");
+          } else if (!player.invincible) {
+            const dmg = 24;
+            player.hp -= dmg;
+            player.damageCooldown = player.damageCooldownTime;
+            player.invincible = true;
+            player.slowmoTimer = 0.25;
+
+            const dist = Math.hypot(dx, dy) || 1;
+            const kbSpeed = 260;
+            player.knockbackX = (dx / dist) * kbSpeed;
+            player.knockbackY = (dy / dist) * kbSpeed;
+            player.knockbackTimer = 0.14;
+
+            addLog("Boss miażdży cię kontaktem za " + dmg + "!", "bad");
+            spawnParticles(player.x, player.y, "#00e5ff");
+            if (player.hp <= 0) {
+              player.hp = 0;
+              gameOver();
+            }
+          }
+        }
+      }
+
+      const newProjectiles = [];
+      projectiles.forEach(pr => {
+        pr.life -= simDt;
+        if (pr.type === "boss_orbit") {
+          pr.baseAngle += pr.orbitSpeed * simDt;
+          if (boss && bossAlive) {
+            pr.x = boss.x + Math.cos(pr.baseAngle) * pr.orbitRadius;
+            pr.y = boss.y + Math.sin(pr.baseAngle) * pr.orbitRadius;
+          }
+        } else if (pr.type === "boss_wave" || pr.type === "boss_zone") {
+        } else {
+          pr.x += pr.vx * simDt;
+          pr.y += pr.vy * simDt;
+        }
+
+        if (!player.invincible) {
+          const dx = pr.x - player.x;
+          const dy = pr.y - player.y;
+          const dist2 = dx*dx + dy*dy;
+          const minDist = pr.radius + player.radius;
+          if (dist2 < minDist*minDist) {
+            player.hp -= pr.damage;
+            player.damageCooldown = player.damageCooldownTime;
+            player.invincible = true;
+            player.slowmoTimer = 0.22;
+
+            const dist = Math.hypot(dx, dy) || 1;
+            const kbSpeed = 220;
+            player.knockbackX = (player.x - pr.x) / dist * kbSpeed;
+            player.knockbackY = (player.y - pr.y) / dist * kbSpeed;
+            player.knockbackTimer = 0.12;
+
+            addLog("Trafił cię pocisk za " + pr.damage + "!", "bad");
+            spawnParticles(player.x, player.y, "#00e5ff");
+            spawnDamageNumber(player.x, player.y, pr.damage, "enemy");
+            pr.life = 0;
+
+            if (player.hp <= 0) {
+              player.hp = 0;
+              gameOver();
+            }
+          }
+        }
+
+        if (pr.life > 0 &&
+            pr.x >= -80 && pr.x <= canvas.width + 80 &&
+            pr.y >= -80 && pr.y <= canvas.height + 80) {
+          newProjectiles.push(pr);
+        }
+      });
+      projectiles = newProjectiles;
+
+      gainXP(simDt * 1.0);
+      particles.forEach(p => {
+        p.x += p.vx * simDt;
+        p.y += p.vy * simDt;
+        p.life -= simDt;
+      });
+      particles = particles.filter(p => p.life > 0);
+
+      updateDamageNumbers(simDt);
+      updateDashTrail(simDt);
+      updateHUD();
+    }
+
+    /* ============================
+       DRAW
+    ============================ */
+    function drawPlayer() {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      const auraRadius = player.radius + 6;
+      const gradient = ctx.createRadialGradient(0,0,0, 0,0, auraRadius);
+      gradient.addColorStop(0, "rgba(0,255,204,0.95)");
+      gradient.addColorStop(1, "rgba(0,255,204,0.0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (player.invincible) {
+        ctx.globalAlpha = 0.4 + Math.sin(performance.now() / 50) * 0.3;
+      } else ctx.globalAlpha = 1;
+
+      ctx.fillStyle = player.dashActive ? "#00ffff" : "#00ffcc";
+      ctx.beginPath();
+      ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawEnemies() {
+      enemies.forEach(e => {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        if (e.type === "rare_shooter") {
+          const auraRadius = e.radius + 6;
+          const gradient = ctx.createRadialGradient(0,0,0, 0,0, auraRadius);
+          gradient.addColorStop(0, "rgba(0,255,204,0.9)");
+          gradient.addColorStop(1, "rgba(0,255,204,0.0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = e.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, e.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    function drawBoss() {
+      if (!bossAlive || !boss) return;
+      ctx.save();
+      ctx.translate(boss.x, boss.y);
+      const auraRadius = boss.radius + 10;
+      const gradient = ctx.createRadialGradient(0,0,0, 0,0, auraRadius);
+      gradient.addColorStop(0, "rgba(0,191,255,0.9)");
+      gradient.addColorStop(1, "rgba(0,191,255,0.0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = boss.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, boss.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      ctx.save();
+      particles.forEach(p => {
+        const alpha = Math.max(0, p.life / 0.9);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawProjectiles() {
+      projectiles.forEach(pr => {
+        ctx.save();
+        ctx.translate(pr.x, pr.y);
+        ctx.fillStyle = pr.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, pr.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    /* ============================
+       GAME OVER
+    ============================ */
+    function gameOver() {
+      running = false;
+      addLog(
+        "Koniec gry! Czas: " + timeSurvived.toFixed(1) +
+        "s, zabójstw: " + kills + ".",
+        "bad"
+      );
+      addLog("Kliknij Start, aby spróbować ponownie.", "info");
+      saveBestScores();
+    }
+
+    /* ============================
+       DEBUG OVERLAY
+    ============================ */
+    let debugFPS = 0;
+    let debugLastFrame = performance.now();
+    const debugDiv = document.createElement("div");
+    debugDiv.style.position = "absolute";
+    debugDiv.style.left = "10px";
+    debugDiv.style.top = "10px";
+    debugDiv.style.padding = "8px 12px";
+    debugDiv.style.background = "rgba(0,0,0,0.55)";
+    debugDiv.style.border = "1px solid rgba(0,255,255,0.4)";
+    debugDiv.style.borderRadius = "6px";
+    debugDiv.style.fontSize = "12px";
+    debugDiv.style.fontFamily = "monospace";
+    debugDiv.style.color = "#00ffcc";
+    debugDiv.style.zIndex = "99999";
+    debugDiv.style.pointerEvents = "none";
+    document.body.appendChild(debugDiv);
+
+    function updateDebugOverlay() {
+      const now = performance.now();
+      debugFPS = 1000 / (now - debugLastFrame);
+      debugLastFrame = now;
+      debugDiv.innerHTML = `
+FPS: ${debugFPS.toFixed(1)}<br>
+running: ${running}<br>
+bossAlive: ${bossAlive}<br>
+arenaLock: ${arenaLockActive}<br>
+player.hp: ${player.hp.toFixed(1)} / ${player.maxHp}<br>
+player.stamina: ${player.stamina.toFixed(1)} / ${player.staminaMax}<br>
+player.level: ${player.level}<br>
+boss.phase: ${boss ? boss.phase : "-"}<br>
+boss.state: ${boss ? boss.state : "-"}<br>
+enemies: ${enemies.length}<br>
+projectiles: ${projectiles.length}<br>
+particles: ${particles.length}<br>
+timeSurvived: ${timeSurvived.toFixed(1)}s<br>
+`;
+    }
+
+    /* ============================
+       RESET GAME STATE
+    ============================ */
+    function resetGameState() {
+      running = false;
+      lastTime = performance.now();
+      timeSurvived = 0;
+      kills = 0;
+      enemies = [];
+      projectiles = [];
+      particles = [];
+      damageNumbers = [];
+      dashTrail = [];
+      boss = null;
+      bossAlive = false;
+      bossSpawnTimer = 0;
+      nextBossTime = 45;
+      arenaLockActive = false;
+      arenaRadius = 230;
+      arenaTargetRadius = 230;
+      bossIntroOverlay = 0;
+      screenShake = 0;
+      screenShakeIntensity = 0;
+      spawnTimer = 0;
+      baseSpawnInterval = 1.6;
+      ownedRunes = [];
+      logEl.innerHTML = "";
+      addLog("Wersja 2.2 – Final Boss Neon. Kliknij Start, aby rozpocząć run.", "info");
+      updateHUD();
+      bossBarContainer.style.display = "none";
+      bossLabel.style.display = "none";
+    }
+
+    /* ============================
+       GAME LOOP
+    ============================ */
+    function gameLoop(timestamp) {
+      const dt = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+      if (running) update(dt);
+
+      ctx.save();
+      applyScreenShake();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(0,255,255,0.05)";
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = gridSize; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = gridSize; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (arenaLockActive) {
+        ctx.strokeStyle = "rgba(0,255,255,0.35)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(arenaX, arenaY, arenaRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      drawEnemies();
+      drawBoss();
+      drawPlayer();
+      drawProjectiles();
+      drawParticles();
+      drawDashTrail();
+      drawDamageNumbers();
+
+      if (bossIntroOverlay > 0) {
+        ctx.fillStyle = `rgba(0,0,0,${bossIntroOverlay})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        bossIntroOverlay -= 0.02;
+        if (bossIntroOverlay < 0) bossIntroOverlay = 0;
+      }
+
+      if (!running && player.hp <= 0) {
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
+        ctx.fillStyle = "#00e5ff";
+        ctx.font = "24px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("KONIEC GRY", canvas.width/2, canvas.height/2 - 5);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "14px Arial";
+        ctx.fillText(
+          "Czas: " + timeSurvived.toFixed(1) + "s • Zabójstwa: " + kills,
+          canvas.width/2,
+          canvas.height/2 + 16
+        );
+      }
+
+      ctx.restore();
+      updateDebugOverlay();
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* ============================
+       START BUTTON + INIT
+    ============================ */
+    startBtn.addEventListener("click", () => {
+      resetPlayer();
+      resetGameState();
+      running = true;
+      lastTime = performance.now();
+      timeSurvived = 0;
+      kills = 0;
+      addLog("Run start! Wersja 2.2 Final Boss Neon.", "info");
+      updateHUD();
+    });
+
+    resetPlayer();
+    loadBestScores();
+    resetGameState();
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+
+  </script>
+</body>
+</html>
