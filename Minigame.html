@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini gra</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #181826, #050509);
+      color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #game {
+      width: 420px;
+      max-width: 90vw;
+      background: rgba(8, 8, 20, 0.96);
+      border-radius: 14px;
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.85);
+      padding: 18px 20px 22px;
+      position: relative;
+      border: 1px solid rgba(120, 140, 255, 0.35);
+    }
+
+    #top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #2f3bff, #bb3bff);
+      font-size: 11px;
+    }
+
+    #stats {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+    }
+
+    #screen {
+      position: relative;
+      background: radial-gradient(circle at 20% 0, #343b7e, #070715);
+      border-radius: 10px;
+      border: 1px solid rgba(130, 150, 255, 0.35);
+      padding: 16px 14px 14px;
+      overflow: hidden;
+    }
+
+    #log {
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 13px;
+      line-height: 1.35;
+      min-height: 140px;
+      max-height: 180px;
+      overflow: hidden;
+      white-space: pre-wrap;
+      color: #dadffd;
+    }
+
+    .line {
+      opacity: 0.2;
+      transform: translateY(6px);
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+    }
+
+    .line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      margin-left: 2px;
+      background: #c5d0ff;
+      animation: blink 0.9s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    #bottom-bar {
+      display: flex;
+      margin-top: 14px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #hint {
+      flex: 1;
+      font-size: 11px;
+      color: #a6b0ff;
+      opacity: 0.8;
+    }
+
+    #controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(145, 165, 255, 0.7);
+      background: radial-gradient(circle at 0 0, #3c46ff, #11122a);
+      color: #f5f5ff;
+      padding: 5px 11px;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .btn.secondary {
+      background: rgba(8, 8, 20, 0.9);
+      border-color: rgba(150, 150, 200, 0.7);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 0 0 transparent;
+    }
+
+    #overlay-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease-out;
+    }
+
+    #overlay-text {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(7, 11, 36, 0.96);
+      border: 1px solid rgba(189, 255, 193, 0.75);
+      color: #dfffe5;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    #overlay-msg.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+<div id="game">
+  <div id="top-bar">
+    <div class="badge">NEON PROTOCOL</div>
+    <div id="stats">
+      <div class="stat" id="score-stat">SCORE: 0</div>
+      <div class="stat" id="streak-stat">STREAK: 0</div>
+      <div class="stat" id="lvl-stat">LVL: 1</div>
+    </div>
+  </div>
+
+  <div id="screen">
+    <div id="log"></div>
+    <div id="overlay-msg">
+      <div id="overlay-text"></div>
+    </div>
+  </div>
+
+  <div id="bottom-bar">
+    <div id="hint">Zachowuj się tak, jakbyś już wiedział sterowanie.</div>
+    <div id="controls">
+      <button class="btn secondary" id="btn-a">A</button>
+      <button class="btn" id="btn-b">B</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const log = document.getElementById("log");
+  const btnA = document.getElementById("btn-a");
+  const btnB = document.getElementById("btn-b");
+  const scoreStat = document.getElementById("score-stat");
+  const streakStat = document.getElementById("streak-stat");
+  const lvlStat = document.getElementById("lvl-stat");
+  const hint = document.getElementById("hint");
+  const overlay = document.getElementById("overlay-msg");
+  const overlayText = document.getElementById("overlay-text");
+
+  let score = 0;
+  let streak = 0;
+  let level = 1;
+  let step = 0;
+  let allowed = true;
+  let pattern = [];
+  let inputBuffer = [];
+  let cursorVisible = true;
+
+  function addLine(text) {
+    const line = document.createElement("div");
+    line.className = "line";
+    line.textContent = text;
+    log.appendChild(line);
+    requestAnimationFrame(() => {
+      line.classList.add("visible");
+    });
+    const lines = log.querySelectorAll(".line");
+    if (lines.length > 8) {
+      log.removeChild(lines[0]);
+    }
+  }
+
+  function updateStats() {
+    scoreStat.textContent = "SCORE: " + score;
+    streakStat.textContent = "STREAK: " + streak;
+    lvlStat.textContent = "LVL: " + level;
+  }
+
+  function flashOverlay(text, good) {
+    overlayText.textContent = text;
+    overlayText.style.borderColor = good
+      ? "rgba(189,255,193,0.9)"
+      : "rgba(255,159,159,0.9)";
+    overlayText.style.color = good ? "#eafff0" : "#ffd5d5";
+    overlay.classList.add("visible");
+    setTimeout(() => overlay.classList.remove("visible"), 420);
+  }
+
+  function randomPattern(len) {
+    const arr = [];
+    for (let i = 0; i < len; i++) {
+      arr.push(Math.random() < 0.5 ? "A" : "B");
+    }
+    return arr;
+  }
+
+  function revealPattern() {
+    addLine("> protokół #" + String(level).padStart(2, "0") + " przygotowany.");
+    setTimeout(() => {
+      addLine("  wzór: " + pattern.join(" "));
+    }, 200);
+  }
+
+  function evaluate() {
+    allowed = false;
+    const success =
+      inputBuffer.length === pattern.length &&
+      inputBuffer.every((v, i) => v === pattern[i]);
+    if (success) {
+      const gain = 10 + level * 2 + streak * 3;
+      score += gain;
+      streak++;
+      if (streak % 3 === 0) level++;
+      addLine("> poprawnie [" + gain + "]");
+      flashOverlay("zgrany sygnał", true);
+    } else {
+      addLine("> błąd sekwencji");
+      flashOverlay("rozjazd sygnału", false);
+      streak = 0;
+      if (score > 5) score -= 5;
+      if (level > 1) level--;
+    }
+    updateStats();
+    setTimeout(nextRound, 420);
+  }
+
+  function nextRound() {
+    step++;
+    inputBuffer = [];
+    pattern = randomPattern(2 + Math.floor(step / 2));
+    addLine("");
+    addLine("# runda " + String(step).padStart(2, "0"));
+    revealPattern();
+    hint.textContent =
+      "Po wyświetleniu wzoru próbuj powtórzyć go przyciskami A/B.";
+    setTimeout(() => {
+      allowed = true;
+      addLine("  twoja kolej: A/B...");
+    }, 350);
+  }
+
+  function handleInput(symbol) {
+    if (!allowed) return;
+    inputBuffer.push(symbol);
+    addLine("  " + symbol);
+    if (inputBuffer.length === pattern.length) {
+      evaluate();
+    }
+  }
+
+  btnA.addEventListener("click", () => handleInput("A"));
+  btnB.addEventListener("click", () => handleInput("B"));
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "a" || e.key === "A") handleInput("A");
+    if (e.key === "b" || e.key === "B") handleInput("B");
+  });
+
+  function init() {
+    addLine("# inicjalizacja kanału");
+    setTimeout(() => addLine("> oczekiwanie na pierwszy wzór..."), 250);
+    setTimeout(() => {
+      nextRound();
+    }, 900);
+  }
+
+  init();
+</script>
+</body>
+</html>
